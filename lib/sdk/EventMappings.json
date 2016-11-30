@@ -1,0 +1,14 @@
+{
+    "on_user_message": {
+        "payload_class_name" : "OnMessagePayload",
+        "callback"           : "on_user_message"
+    },
+    "on_webhook": {
+        "payload_class_name" : "OnHookPayload",
+        "callback"           : "on_webhook"
+    },
+    "on_bot_message" : {
+        "payload_class_name" : "OnMessagePayload",
+        "callback"           : "on_bot_message"
+    }
+}
