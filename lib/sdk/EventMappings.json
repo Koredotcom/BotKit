@@ -1,14 +1,17 @@
 {
     "on_user_message": {
-        "payload_class_name" : "OnMessagePayload",
-        "callback"           : "on_user_message"
-    },
-    "on_webhook": {
-        "payload_class_name" : "OnHookPayload",
-        "callback"           : "on_webhook"
+        "payload_class_name"      : "OnMessagePayload",
+        "callback"                : "on_user_message",
+        "sendComponentNameInArgs" : false
     },
     "on_bot_message" : {
-        "payload_class_name" : "OnMessagePayload",
-        "callback"           : "on_bot_message"
+        "payload_class_name"      : "OnMessagePayload",
+        "callback"                : "on_bot_message",
+        "sendComponentNameInArgs" : false
+    },
+    "on_webhook": {
+        "payload_class_name"      : "OnHookPayload",
+        "callback"                : "on_webhook",
+        "sendComponentNameInArgs" : true
     }
 }

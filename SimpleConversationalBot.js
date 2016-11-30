@@ -60,7 +60,7 @@ module.exports = {
         var err;
         callback(err);
     },
-    on_webhook    : function(requestId, data, callback) {
+    on_webhook    : function(requestId, data, componentName, callback) {
         /*1: Synchronous response:
         Modify context/message/session
         callback(null, data);
