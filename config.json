@@ -1,6 +1,7 @@
 {
     "app": {
-        "baseURL": "http://localhost"
+        "baseURL": "http://localhost",
+        "apiPrefix" : ""
     },
     "credentials": {
         "apikey": "test_api_key",
