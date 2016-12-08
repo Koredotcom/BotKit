@@ -9,3 +9,4 @@ var server = new Server(config, app);
 server.start();
 
 sdk.registerBot(require('./SimpleConversationalBot.js'));
+sdk.registerBot(require('./GuessTheNumber.js'));
