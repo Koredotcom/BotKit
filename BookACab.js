@@ -1,41 +1,53 @@
-var botId   = "st-007da037-67f9-55c3-bf93-6272ca639359";
-var botName = "Book a Cab";
-var sdk     = require("./lib/sdk");
-var Promise = sdk.Promise;
-
-var cabList = [
-    {
-        driverName : "Ayrton Senna",
-        carModel   : "Toyota Corolla",
-        timeAway   : "2 minutes",
-        price      : "1",
-    },
-    {
-        driverName : "Michael Schumacher",
-        carModel   : "Mercedes E-Class",
-        timeAway   : "7 minutes",
-        price      : "3",
-    },
-    {
-        driverName : "Lewis Hamilton",
-        carModel   : "Tata Indica",
-        timeAway   : "5 minutes",
-        price      : "0.5",
-    },
-    {
-        driverName : "Sebastian Vettel",
-        carModel   : "Lamborghini",
-        timeAway   : "10 minutes",
-        price      : "10",
-    }
-];
+var botId          = "st-007da037-67f9-55c3-bf93-6272ca639359";
+var botName        = "Book a Cab";
+var sdk            = require("./lib/sdk");
+var Promise        = sdk.Promise;
+var request        = require("request");
+var config         = require("./config");
+var mockServiceUrl = config.examples.mockServicesHost + '/cabbot';
 
 function findCabs(/*userLoc*/) {
-    return Promise.resolve(cabList);
+    return new Promise(function(resolve, reject) {
+        request({
+            url: mockServiceUrl + '/findcabs',
+            method: 'get',
+        }, function(err, res) {
+            if (err) {
+                return reject(err);
+            }
+            resolve(res);
+        });
+    });
 }
 
-function cabBookingService(/*requestId, cabId, userLoc, destination, callbacks*/) {
-    //Makes cab booking request
+function cabBookingService(requestId, cabId, userLoc, destination, callbacks) {
+    return new Promise(function(resolve, reject) {
+        request({
+            url: mockServiceUrl + '/findcabs',
+            method: 'post',
+            headers: {
+                'content-type' : 'application/json'
+            },
+            body: {
+                requestId   : requestId,
+                cabId       : cabId,
+                loc         : userLoc,
+                destination : destination
+            },
+            json: true
+        }, function(err, res) {
+            if (err || !res.body) {
+                return reject(err);
+            }
+            if (res.body.success) {
+                callbacks.on_success(requestId);
+                return;
+            } else {
+                callbacks.on_failure(requestId);
+            }
+            resolve(res);
+        });
+    });
 }
 
 function onBookingSuccess(requestId) {

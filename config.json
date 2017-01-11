@@ -19,5 +19,8 @@
     "server": {
         "port": 8003,
         "protocol": "https"
+    },
+    "examples" : {
+        "mockServicesHost"  : "http://localhost:8004"
     }
 }

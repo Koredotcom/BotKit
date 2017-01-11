@@ -1,0 +1,30 @@
+<!-- views/home.handlebars -->
+{{#if user}}
+  <div class="jumbotron">
+    <h1>MongoDB User Authentication</h1>
+    <p>Below is your profile information!</p>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Profile Information</h3>
+    </div>
+    <div class="panel-body">
+      <p>Username: {{user.username}}</p>
+      <p>Avatar: <img src="{{user.avatar}}"/></p>
+    </div>
+  </div>
+  
+{{else}}
+  <div class="jumbotron">
+    <h1>MongoDB User Authentication</h1>
+    <p>Sign in and view your profile!</p>
+    <p>
+      <a href="/userauth/signin" class="btn btn-primary btn-lg" role="button">
+        <span class="glyphicon glyphicon-user"></span> 
+        Sign in!
+      </a>
+    </p>
+  </div>
+  
+{{/if}}
+   
