@@ -6,6 +6,13 @@ var request        = require("request");
 var config         = require("./config");
 var mockServiceUrl = config.examples.mockServicesHost + '/cabbot';
 
+/*
+ * This example showcases the 2 different ways to use the webhook node:
+ *  Synchronously (FindNearbyCabs)
+ *  Asynchronously (BookTheCab)
+ */
+
+//Make request to mockservice app
 function findCabs(/*userLoc*/) {
     return new Promise(function(resolve, reject) {
         request({
@@ -20,6 +27,9 @@ function findCabs(/*userLoc*/) {
     });
 }
 
+/*
+ * Make request to mock service app, and call 'on_success' or 'on_failure' callback
+ */
 function cabBookingService(requestId, cabId, userLoc, destination, callbacks) {
     return new Promise(function(resolve, reject) {
         request({
@@ -50,6 +60,9 @@ function cabBookingService(requestId, cabId, userLoc, destination, callbacks) {
     });
 }
 
+/*/
+ * Responds to the webhook asynchronously with the success flag.
+ */
 function onBookingSuccess(requestId) {
     sdk.getSavedData(requestId)
         .then(function(data) {
@@ -69,6 +82,9 @@ function onBookingFailure(requestId) {
         });
 }
 
+//call cabBookingService with the requestId. This service is expected to respond asynchronously.
+//'requestId' must be passed along all asynchronous flows, to allow the BotKit to respond
+// back to the hook once the async process is completed.
 function bookTheCab(requestId, cabId, userLoc, destination) {
     cabBookingService(requestId, cabId, userLoc, destination, {
         on_success : onBookingSuccess,

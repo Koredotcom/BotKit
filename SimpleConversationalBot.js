@@ -2,6 +2,13 @@ var botId = "st-12345";
 var botName = "testBot";
 var sdk = require("./lib/sdk");
 
+/*
+ * This is the most basic example of BotKit.
+ *
+ * It showcases how the BotKit can intercept the message being sent to the bot or the user.
+ *
+ * We can either update the message, or chose to call one of 'sendBotMessage' or 'sendUserMessage'
+ */
 module.exports = {
     botId   : botId,
     botName : botName,
@@ -9,8 +16,10 @@ module.exports = {
     on_user_message : function(requestId, data, callback) {
         if (data.message === "Hi") {
             data.message = "Hello";
+            //Sends back 'Hello' to user.
             return sdk.sendUserMessage(data, callback);
         } else {
+            //Forward the message to bot
             return sdk.sendBotMessage(data, callback);
         }
     },
@@ -18,6 +27,7 @@ module.exports = {
         if (data.message === 'hello') {
             data.message = 'The Bot says hello!';
         }
+        //Sends back the message to user
         return sdk.sendUserMessage(data, callback);
     }
 };

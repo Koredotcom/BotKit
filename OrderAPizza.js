@@ -6,6 +6,12 @@ var request        = require("request");
 var config         = require("./config");
 var mockServiceUrl = config.examples.mockServicesHost + '/pizzabot';
 
+/*
+ * This example showcases the async capability of webhook nodes
+ *
+ * 'placeOrderToStore' method is called in the PlaceOrder webhook.
+ * This service responds asyncronously
+ */
 function placeOrderToStore(requestId, storeId, order, callbacks) {
     return new Promise(function(resolve, reject) {
         request({
