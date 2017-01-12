@@ -15,7 +15,7 @@ function findCabs(/*userLoc*/) {
             if (err) {
                 return reject(err);
             }
-            resolve(res);
+            resolve(res.body);
         });
     });
 }
