@@ -18,9 +18,12 @@ module.exports = {
             data.message = "Hello";
             //Sends back 'Hello' to user.
             return sdk.sendUserMessage(data, callback);
-        } else {
+        } else if(!data.agent_transfer){
             //Forward the message to bot
             return sdk.sendBotMessage(data, callback);
+        } else {
+            data.message = "Agent Message";
+            return sdk.sendUserMessage(data, callback);
         }
     },
     on_bot_message  : function(requestId, data, callback) {
@@ -32,7 +35,7 @@ module.exports = {
         return sdk.sendUserMessage(data, callback);
     },
     on_agent_transfer : function(requestId, data, callback){
-        return callback(null, data)
+        return callback(null, data);
     }
 };
 
