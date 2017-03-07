@@ -28,7 +28,11 @@ module.exports = {
             data.message = 'The Bot says hello!';
         }
         //Sends back the message to user
+        
         return sdk.sendUserMessage(data, callback);
+    },
+    on_agent_transfer : function(requestId, data, callback){
+        return callback(null, data)
     }
 };
 

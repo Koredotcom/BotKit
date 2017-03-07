@@ -16,5 +16,10 @@
         "callback"                : "on_webhook",
         "sendComponentNameInArgs" : true,
         "processResponse"         : true
+    },
+    "on_agent_transfer": {
+        "payload_class_name"      : "OnAgentTransferPayload",
+        "callback"                : "on_agent_transfer",
+        "processResponse"         : true
     }
 }
