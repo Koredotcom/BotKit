@@ -10,12 +10,10 @@
         "appId": "test_app_id"
     },
     "redis": {
-        "name": "botkit",
         "errorlistener": true,
         "options": {
             "host": "localhost",
-            "port": 6379,
-            "retry_max_delay": 300000
+            "port": 6379
         },
         "available": false
     },
