@@ -10,7 +10,6 @@
         "appId": "test_app_id"
     },
     "redis": {
-        "errorlistener": true,
         "options": {
             "host": "localhost",
             "port": 6379
