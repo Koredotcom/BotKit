@@ -16,7 +16,8 @@
             "host": "localhost",
             "port": 6379,
             "retry_max_delay": 300000
-        }
+        },
+        "available": false
     },
     "examples" : {
         "mockServicesHost"  : "http://localhost:8004"
