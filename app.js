@@ -8,6 +8,7 @@ var server = new Server(config, app);
 
 server.start();
 
+sdk.registerBot(require('./FindAFlight.js'));
 sdk.registerBot(require('./SimpleConversationalBot.js'));
 sdk.registerBot(require('./GuessTheNumber.js'));
 sdk.registerBot(require('./BookACab.js'));
