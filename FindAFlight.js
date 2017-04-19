@@ -7,9 +7,11 @@ var config         = require("./config");
 //var mockServiceUrl = config.examples.mockServicesHost + '/cabbot';
 
 
+var amdApiKey = "<%amdApiKey%>";
+
 //Make request to service app
 function findFlights(origin, destination, departureDate) {
-	var serviceUrl = 'http://api.sandbox.amadeus.com/v1.2/flights/low-fare-search?apikey=QccY2qolBqkHIYHkcs2TTrS8DdExg8lJ&number_of_results=5';
+	var serviceUrl = 'http://api.sandbox.amadeus.com/v1.2/flights/low-fare-search?apikey='+amdApiKey+'&number_of_results=5';
     return new Promise(function(resolve, reject) {
         request({
             url: serviceUrl+'&origin='+origin+'&destination='+destination+'&departure_date='+departureDate,
@@ -26,7 +28,7 @@ function findFlights(origin, destination, departureDate) {
 
 //Make request to service app
 function findAirports(searchTerm) {
-    var airportsUrl="http://api.sandbox.amadeus.com/v1.2/airports/autocomplete?apikey=QccY2qolBqkHIYHkcs2TTrS8DdExg8lJ";
+    var airportsUrl="http://api.sandbox.amadeus.com/v1.2/airports/autocomplete?apikey="+amdApiKey;
     return new Promise(function(resolve, reject) {
         request({
             url: airportsUrl+"&term="+searchTerm,
@@ -59,9 +61,7 @@ module.exports = {
           var departureDate = context.entities.Date;
           findFlights(origin,destination,departureDate)
 			.then(function(flightResults) {
-                console.log();
-
-				data.context.flightResults = flightResults;
+                data.context.flightResults = flightResults;
 				callback(null, data);
 			});
 	    } else if(componentName === 'GetSourceAirports'){
