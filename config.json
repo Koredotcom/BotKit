@@ -18,5 +18,6 @@
     },
     "examples" : {
         "mockServicesHost"  : "http://localhost:8004"
-    }
+    },
+    "liveagentlicense": "8947569"
 }
