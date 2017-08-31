@@ -88,11 +88,22 @@ function sendWelcomeMessage(data){
       
           var intent = intentResponse.result.action;
           data.message = 'Intent identified from api.ai is '+ intent;
-          sdk.sendUserMessage(data,callback);
+
+          if (intentResponse.result.metadata && intentResponse.result.metadata.intentName) {
+              intent = intentResponse.result.metadata.intentName
+          }
+
+          //sdk.sendUserMessage(data,callback);
           
           //Lets try to get entities from another NLP service, Luis.ai
           getEntitiesFromluis(message).then(function(entitiesResponse){
-      
+
+              data.metaInfo = {
+                  'intentInfo' : {
+                      'intent' : intent
+                  }
+              };
+
               if(entitiesResponse.entities.length > 0){      //if entities recognised from luis or not
               
                 var entities = entitiesResponse.entities;
@@ -104,18 +115,23 @@ function sendWelcomeMessage(data){
                 // sdk.sendUserMessage(data,callback);
               
                 data.message = 'Search hotels'; // Here we are setting the message to match to task name on Kore.ai
-                data.context.session.BotUserSession.entitiesRecognized = true;
-              
+                var entities = entitiesResponse.entities;
+                if(entities[0].entity === 'builtin.geography.city') {
+                    var entityToKoreNL = {
+                        'City': entities[0].entity
+                    };
+                    intentInfo.entities = [entityToKoreNL];
+                }
+
                 // Now lets send a message to Kore.ai Bot, with data that says, the intent is already recognized
                 // and the entities are also set into the context
               
                 return sdk.sendBotMessage(data,callback);
             
-              }else{          //Intent recognized from Api.ai, but the entity not recognized from Luis.ai
+              }else{  //Intent recognized from Api.ai, but the entity not recognized from Luis.ai
               
                 data.message = 'Search hotels';
-                data.context.session.BotUserSession.entitiesRecognized = false;
-              
+
                 // Now lets send a message to Kore.ai Bot, with data that says, the intent is already recognized
                 // Kore.ai Bot should prompt for the entity in this case, as we did not set the entity value into context
               
