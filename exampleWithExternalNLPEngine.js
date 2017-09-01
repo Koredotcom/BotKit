@@ -120,7 +120,7 @@ function sendWelcomeMessage(data){
                     var entityToKoreNL = {
                         'City': entities[0].entity
                     };
-                    intentInfo.entities = [entityToKoreNL];
+                    intentInfo.entities = entityToKoreNL;
                 }
 
                 // Now lets send a message to Kore.ai Bot, with data that says, the intent is already recognized
