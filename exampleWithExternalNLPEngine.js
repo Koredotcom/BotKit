@@ -18,6 +18,7 @@ var Promise = sdk.Promise;
 function getIntentFromApiai(message){
    return new Promise(function(resolve, reject) {
         request({
+	    // Update the below url with the api.ai bot configuration.
             url: 'https://api.api.ai/api/query?v=20150910&query='+message+'&lang=en&sessionId=72119261-b1c2-4996-84dd-d874d7754adc',
             method: 'GET',
             headers: {
@@ -39,6 +40,7 @@ function getIntentFromApiai(message){
 function getEntitiesFromluis(message){
    return new Promise(function(resolve, reject) {
         request({
+	    // Update the below url with the Luis.ai bot configuration.
             url: 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/12730170-ef21-4047-9900-03de0bfdf14a?subscription-key=c063935b88e84bad98e40d6fee3f03bd&verbose=true&timezoneOffset=0&q='+message,
             method: 'GET',
             headers: {
@@ -81,7 +83,7 @@ function sendWelcomeMessage(data){
           sdk.sendUserMessage(data,callback);
           
       }
-      
+
       getIntentFromApiai(message).then(function(intentResponse){   
     
         if(intentResponse.result.score > 0){      //if intent recognized from api.ai
@@ -114,13 +116,13 @@ function sendWelcomeMessage(data){
               
                 // sdk.sendUserMessage(data,callback);
               
-                data.message = 'Search hotels'; // Here we are setting the message to match to task name on Kore.ai
+                data.message = 'Search hotels'; // Here we are setting the message to match to task name on Kore.ai, this message will be ignored if intent is passed externally.
                 var entities = entitiesResponse.entities;
-                if(entities[0].entity === 'builtin.geography.city') {
-                    var entityToKoreNL = {
+                if(entities[0].type === 'builtin.geography.city') {
+                    var entityToKoreNL = { // entityToKoreNL object should contain the keys as per the Kore entity recognition documentation.
                         'City': entities[0].entity
                     };
-                    intentInfo.entities = entityToKoreNL;
+                    data.metaInfo.intentInfo.entities = entityToKoreNL;
                 }
 
                 // Now lets send a message to Kore.ai Bot, with data that says, the intent is already recognized
@@ -151,7 +153,8 @@ function sendWelcomeMessage(data){
     },
 
     //on_bot_message handler
-    on_bot_message  : function(requestId, data, callback) {  
+    on_bot_message  : function(requestId, data, callback) {
+        // In case of intent is not identified by Kore NL, 'intentMatched' flag will false. (data._originalPayload.metaInfo.intentInfo.intentMatched)  
         return sdk.sendUserMessage(data, callback);
     },
    
