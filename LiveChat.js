@@ -142,6 +142,12 @@ function onBotMessage(requestId, data, cb){
             if(angry.level >=2){
                 connectToAgent(requestId, data);
             }
+            else {
+                sdk.sendUserMessage(data, cb);
+            }
+        }
+        else {
+            sdk.sendUserMessage(data, cb);
         }
     }
     else if(!entry)
