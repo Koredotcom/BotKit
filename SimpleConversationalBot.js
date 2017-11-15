@@ -36,6 +36,10 @@ module.exports = {
     },
     on_agent_transfer : function(requestId, data, callback){
         return callback(null, data);
+    },
+    on_event : function (requestId, data, callback) {
+        console.log("on_event -->  Event : ", data.event);
+        return callback(null, data);
     }
 };
 

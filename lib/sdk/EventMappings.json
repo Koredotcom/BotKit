@@ -21,5 +21,11 @@
         "payload_class_name"      : "OnAgentTransferPayload",
         "callback"                : "on_agent_transfer",
         "processResponse"         : true
+    },
+    "on_event": {
+        "payload_class_name"      : "OnEventPayload",
+        "callback"                : "on_event",
+        "sendComponentNameInArgs" : false,
+        "processResponse"         : false
     }
 }
