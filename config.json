@@ -19,5 +19,6 @@
     "examples" : {
         "mockServicesHost"  : "http://localhost:8004"
     },
-    "liveagentlicense": "8947569"
+    "liveagentlicense": "8947569",
+    "supportsMessageAck": true
 }
