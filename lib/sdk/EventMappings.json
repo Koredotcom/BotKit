@@ -3,28 +3,33 @@
         "payload_class_name"      : "OnMessagePayload",
         "callback"                : "on_user_message",
         "sendComponentNameInArgs" : false,
+        "ackImmediately"        : true,
         "processResponse"         : false
     },
     "on_bot_message" : {
         "payload_class_name"      : "OnMessagePayload",
         "callback"                : "on_bot_message",
         "sendComponentNameInArgs" : false,
+        "ackImmediately"        : true,
         "processResponse"         : false
     },
     "on_webhook": {
         "payload_class_name"      : "OnHookPayload",
         "callback"                : "on_webhook",
         "sendComponentNameInArgs" : true,
+        "ackImmediately"        : false,
         "processResponse"         : true
     },
     "on_agent_transfer": {
         "payload_class_name"      : "OnAgentTransferPayload",
         "callback"                : "on_agent_transfer",
+        "ackImmediately"        : true,
         "processResponse"         : true
     },
     "on_event": {
         "payload_class_name"      : "OnEventPayload",
         "callback"                : "on_event",
+        "ackImmediately"        : true,
         "sendComponentNameInArgs" : false,
         "processResponse"         : false
     }
