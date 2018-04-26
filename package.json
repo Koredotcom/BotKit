@@ -80,7 +80,8 @@
     "validator": "^3.33.0",
     "varify": "^0.1.1",
     "vary": "^1.1.0",
-    "wordwrap": "^0.0.3"
+    "wordwrap": "^0.0.3",
+    "stopword": "^0.1.9"
   },
   "devDependencies": {},
   "scripts": {

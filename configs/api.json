@@ -1,6 +1,4 @@
 {
-  "baseUrl":"http://192.168.10.56/",
-  "apiVersion" :"api/1.1/",
   "seviceUrl":{
     "GETMEMBERDATA" :{
       "url" : "teams/:teamId/topics/:topicId/posts/:postId",
@@ -44,6 +42,14 @@
     },
     "Notify_Colleague" :{
       "url" :"ka/users/%s/question",
+      "type" :"POST"
+    },
+    "ShareArticle" : {
+      "url" :"ka/users/%s/knowledge/share",
+      "type" :"POST"
+    },
+    "MeetingSlot":{
+      "url" :"ka/users/%s/calendar/freebusyslots",
       "type" :"POST"
     }
   }

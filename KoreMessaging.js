@@ -7,9 +7,11 @@ var config         = require("./config");
 var _              = require('lodash');
 var util           = require('util');
 var mockServiceUrl = config.examples.mockServicesHost;
-var apiConfig = require('./configs/api.json');
-var invalidUtterance;
-
+var apiConfig      = require('./configs/api.json');
+var pr             = require('./PersonResolve.js');
+var sw             = require('stopword');
+var botId          = config.streamId;
+var botName        = config.botName;
 
 /*
  * This example showcases the async capability of webhook nodes
@@ -94,7 +96,7 @@ module.exports = {
     on_webhook      : function(requestId, data, componentName, callback) {
         console.log("componentName===",componentName);
         console.log("request data",JSON.stringify(data))
-        var url = apiConfig.baseUrl + apiConfig.apiVersion;
+        var url = config.koraUrl + config.apiVersion;
         var type = "GET";
         var reqBody = {};
         var payload = {};
@@ -110,6 +112,7 @@ module.exports = {
             var mappedkuid  = customData.kmUId;
             var order = context.order;
             var storeId = context.storeId;
+            var isPersonResolve = false;
             sdk.saveData(requestId, data)
                .then(function() {
                         if(componentName === 'GETMEMBERDATA'){
@@ -173,37 +176,35 @@ module.exports = {
                                 type = apiConfig.seviceUrl[componentName].type;
 
                         }else if(componentName === 'SearchKnowledgeData'){
-                                url += apiConfig.seviceUrl[componentName].url;
-                                url = util.format(url, mappedkuid);
-                                var entities =context.entities;
-                                invalidUtterance = context.session.BotUserSession.lastMessage.messagePayload.message.body;
-                                var input = context.userInputs.originalInput.sentence;
-                                var stopKeyword = context.GetIntentKeyword.response.body;
-                                var regex = /(?:^|\W)#(\w+)(?!\w)/g, match, hashTags = [];
-                                while (match = regex.exec(input)) {
-                                    hashTags.push(match[1]);
-                                }
-                                stopKeyword = _.difference(stopKeyword,hashTags);
-                                payload = {
-                                    type : "knowledge",
-                                    keywords : stopKeyword,
-                                    mappedkuid : mappedkuid,
-                                    streamId : context.botid,
-                                    hashTags : hashTags
+                            url += apiConfig.seviceUrl[componentName].url;
+                            url = util.format(url, mappedkuid);
+                            var entities =context.entities;
+                            var inputString = context.userInputs.originalInput.sentence;
+                            var  keyWord = sw.removeStopwords(inputString.split(" "));
+                            var regex = /(?:^|\W)#(\w+)(?!\w)/g, match, hashTags = [],tempHash = [];
+                            while (match = regex.exec(inputString)) {
+                                hashTags.push(match[1]);
+                                tempHash.push("#"+match[1]);
+                            }
+                            keyWord = _.difference(keyWord,tempHash)
+                            payload = {
+                                type : "knowledge",
+                                keywords : keyWord,
+                                mappedkuid : mappedkuid,
+                                streamId : context.botid,
+                                hashTags : hashTags
 
-                                }
+                            }
+                            if(entities && entities.PersonEntity)
+                                payload.from =entities.PersonEntity;
 
-                                if(entities && entities.PersonEntity)
-                                    payload.from =entities.PersonEntity;
-
-                                if(entities && entities.DateEntity)  {
-                                    payload.fromaDate = new Date(entities.DateEntity);
-                                    payload.toDate    = new Date();
-                                }
-                                if(entities && entities.TimeEntity)
-                                    payload.time = entities.TimeEntity;
-                                console.log("Payload-----------------------------",payload);
-                                type = apiConfig.seviceUrl[componentName].type;
+                            if(entities && entities.DateEntity)  {
+                                payload.fromaDate = new Date(entities.DateEntity);
+                                payload.toDate    = new Date();
+                            }
+                            if(entities && entities.TimeEntity)
+                                payload.time = entities.TimeEntity;
+                            type = apiConfig.seviceUrl[componentName].type;
 
                         }else if(componentName === 'GetKnowledge'){
                                 var action = context.entities.ActionEntity;
@@ -345,9 +346,67 @@ module.exports = {
 
                                 }
                                 type = apiConfig.seviceUrl[componentName].type;
+                        }else if(componentName ==='ShareArticle'){
+                            url += apiConfig.seviceUrl[componentName].url;
+                            url = util.format(url, mappedkuid);
+                            var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
+                            context.session.BotUserSession.lastMessage.messagePayload.message.params);
+                            if(params && typeof params ==='string')
+                                params = JSON.parse(params);
+                            var inputData = context.userInputs.originalInput && context.userInputs.originalInput.sentence;
+                            var userIds = [];
+                            var emailIds = [];
+                            params.forEach(function(u){
+                                userIds.push(u.id);
+                                emailIds.push(u.emailId);
+                            })
+                            knowledgeIds = context.userInfo && context.userInfo.id;
+                            payload = {
+
+                                userIds      : userIds,
+                                knowledgeIds : [knowledgeIds]
+                            }
+                            type = apiConfig.seviceUrl[componentName].type;
+                        }else if(componentName === 'MeetingSlot'){
+                            url += apiConfig.seviceUrl[componentName].url;
+                            url = util.format(url, mappedkuid);
+                            var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
+                            context.session.BotUserSession.lastMessage.messagePayload.message.params);
+                            if(params && typeof params ==='string')
+                                params = JSON.parse(params);
+
+                            var userIds = [];
+                            params.invitees.forEach(function(e){
+                                userIds.push(e);
+                            })
+                            type = apiConfig.seviceUrl[componentName].type;
+                            payload = {
+                                userIds      : userIds,//context.userIds
+                                "title" 	: params.title,
+                                "slot"  	: params.slot,
+                                "type"  	: params.type,
+                                "when"  	: params.when,
+                                "duration"	: params.duration
+                            }
+                        }else if(componentName === 'PersonResolveHook'){
+                            isPersonResolve = true;
+                            pr.resPerson(token,context.requestData)
+                                .then(function(res){
+                                    sdk.getSavedData(requestId)
+                                        .then(function(data) {
+                                            data.context.successful = true;
+                                            data.context.personResolveResponse = res;
+                                            sdk.respondToHook(data);
+                                        });
+                                });
                         }
+                    if(isPersonResolve){
+                        isPersonResolve = false;
+                    }else{
                         serviceRequest(requestId, storeId, url, payload, type,headers);
-                        callback(null, new sdk.AsyncResponse());
+                    }
+
+                    callback(null, new sdk.AsyncResponse());
                 });
 
     }
