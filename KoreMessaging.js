@@ -8,7 +8,6 @@ var _              = require('lodash');
 var util           = require('util');
 var mockServiceUrl = config.examples.mockServicesHost;
 var apiConfig      = require('./configs/api.json');
-var pr             = require('./PersonResolve.js');
 var sw             = require('stopword');
 var botId          = config.streamId;
 var botName        = config.botName;
@@ -112,7 +111,6 @@ module.exports = {
             var mappedkuid  = customData.kmUId;
             var order = context.order;
             var storeId = context.storeId;
-            var isPersonResolve = false;
             sdk.saveData(requestId, data)
                .then(function() {
                         if(componentName === 'GETMEMBERDATA'){
@@ -389,24 +387,32 @@ module.exports = {
                                 "duration"	: params.duration
                             }
                         }else if(componentName === 'PersonResolveHook'){
-                            isPersonResolve = true;
-                            pr.resPerson(token,context.requestData)
-                                .then(function(res){
-                                    sdk.getSavedData(requestId)
-                                        .then(function(data) {
-                                            data.context.successful = true;
-                                            data.context.personResolveResponse = res;
-                                            sdk.respondToHook(data);
-                                        });
-                                });
-                        }
-                    if(isPersonResolve){
-                        isPersonResolve = false;
-                    }else{
+			 url += apiConfig.seviceUrl[componentName].url;
+                         payload =  JSON.parse(context.requestData);
+                         type = apiConfig.seviceUrl[componentName].type;}
+			}else if(componentName === 'CreateEvent'){       
+                            url += apiConfig.seviceUrl[componentName].url
+                            url = util.format(url, mappedkuid);          
+                           var slotdata = context.slotdata;              
+                           var title = context.meetingdata.title;        
+                           var emails =  context.emailIds;               
+                           var allemails = [];                           
+                           if(emails){                              
+                                  emails.forEach(function(email){  
+                                  var emailObj = {};               
+                                  emailObj['email'] = email;       
+                                  allemails.push(emailObj);        
+                           });                                   
+                           type = apiConfig.seviceUrl[componentName].type
+                           payload = {                                   
+                              "endTime"       :       slotdata.endTime,
+                              "startTime"     :       slotdata.startTim
+                              "attendees"     :       allemails,       
+                              "title"         :       title            
+                           }                                        
+                         }
                         serviceRequest(requestId, storeId, url, payload, type,headers);
-                    }
-
-                    callback(null, new sdk.AsyncResponse());
+                        callback(null, new sdk.AsyncResponse());
                 });
 
     }
