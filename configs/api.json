@@ -51,6 +51,14 @@
     "MeetingSlot":{
       "url" :"ka/users/%s/calendar/freebusyslots",
       "type" :"POST"
-    }
+    },                                                                  
+   "CreateEvent":{                                                      
+      "url"  :"ka/users/%s/calendar/createevents",                       
+      "type" :"POST"                                                    
+   },                                                                  
+   "PersonResolveHook":{                                               
+      "url"  :"search/usersresolve?",                                    
+      "type" :"POST"                                                    
+   } 
   }
 }
