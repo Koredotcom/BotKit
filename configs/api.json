@@ -57,7 +57,7 @@
       "type" :"POST"                                                    
    },                                                                  
    "PersonResolveHook":{                                               
-      "url"  :"search/usersresolve?",                                    
+      "url"  :"search/KAUsers?",                                    
       "type" :"POST"                                                    
    } 
   }
