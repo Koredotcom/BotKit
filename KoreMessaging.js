@@ -375,7 +375,7 @@ module.exports = {
 
                             var userIds = [];
                             params.invitees.forEach(function(e){
-                                userIds.push(e);
+                                userIds.push(e.id);
                             })
                             type = apiConfig.seviceUrl[componentName].type;
                             payload = {
