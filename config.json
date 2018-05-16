@@ -4,7 +4,7 @@
     "streamId" : "st-56b87382-b5ac-58bd-a395-8737d889b0ad",
     "botName" : "KoreAssistantQA",
     "server": {
-        "port":80
+        "port":7777
     },
     "app": {
         "apiPrefix" : ""

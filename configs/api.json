@@ -45,7 +45,7 @@
       "type" :"POST"
     },
     "ShareArticle" : {
-      "url" :"ka/users/%s/knowledge/share",
+      "url" :"ka/users/%s/knowledge/%s/share",
       "type" :"POST"
     },
     "MeetingSlot":{

@@ -1,5 +1,3 @@
-var botId          = "st-9a1144d3-9f30-526e-8e64-e065154b92b9";
-var botName        = "KoraAssistantNew";
 var sdk            = require("./lib/sdk");
 var Promise        = sdk.Promise;
 var request        = require("request");
@@ -205,43 +203,65 @@ module.exports = {
                             type = apiConfig.seviceUrl[componentName].type;
 
                         }else if(componentName === 'GetKnowledge'){
-                                var action = context.entities.ActionEntity;
-                                var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
-                                url += apiConfig.seviceUrl[componentName].url;
-                                url = util.format(url, mappedkuid);
-                                var entities =context.entities;
-                                var key_entity =entities.KeywordExtraction  && entities.KeywordExtraction.split(" ");
-                                payload = {
-                                    type         : "knowledge",
-                                    keywords     : key_entity,
-                                    mappedkuid   : mappedkuid,
-                                    streamId     : context.botid,
-                                    action       : action
-                                }
-                                if(entities && entities.PersonEntity){
-                                    payload.personEntity = {
-                                        names : entities.PersonEntity,
+                            var action = context.entities.ActionEntity;
+                            var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
+                            url += apiConfig.seviceUrl[componentName].url;
+                            url = util.format(url, mappedkuid);
+                            var entities =context.entities;
+                            var key_entity =entities.KeywordExtraction  && entities.KeywordExtraction.split(" ");
+                            payload = {
+                                type         : "knowledge",
+                                keywords     : key_entity,
+                                mappedkuid   : mappedkuid,
+                                streamId     : context.botid,
+                                action       : action
+                            }
+                            var fileType  = {
+                                "image" :["pic","pics","screenshot","screenshots","photo","photos","photograph","photographs","picture"                                                ,"pictures","snapshot","snapshots","snap","snaps","pix","pixes","photostat","photocopy","photocopies"],
+                                "file" :["document","documents","doc","docs","spreadsheet","spreadsheets","excel sheet","work sheet","sheets"]
+                            }
+                            var type;
+                            if(entities && entities.AttachmentEntity){
+                                payload.componentMeta= []
+                                for (var key in fileType) {
+                                    if (fileType.hasOwnProperty(key)) {
+                                        var isExist = fileType[key].indexOf(entities.AttachmentEntity)>-1
+                                        if(isExist){
+                                            type = key;
+                                        }
                                     }
                                 }
-                                if(entities && entities.EmailEntity){
-                                    payload.personEntity = {
-                                        emailIds : entities.EmailEntity,
-                                    }
+                                if(type){
+                                    payload.componentMeta.push({type: type});
+                                }else{
+                                    payload.componentMeta.push({ext:entities.AttachmentEntity});
                                 }
-                                if(sentence.indexOf("shared to me")>-1){
-                                    console.log("shared to me");
-                                    payload.action = "sharedBy";
-                                }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1 || sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1){
-                                    console.log("shared to",sentence);
-                                    payload.action = "sharedTo";
+
+                            }
+                            if(entities && entities.PersonEntity){
+                                payload.personEntity = {
+                                    names : entities.PersonEntity,
                                 }
-                                if(entities && entities.DateEntity)  {
-                                    payload.fromaDate = new Date(entities.DateEntity);
-                                    payload.toDate    = new Date();
+                            }
+                            if(entities && entities.EmailEntity){
+                                payload.personEntity = {
+                                    emailIds : entities.EmailEntity,
                                 }
-                                if(entities && entities.TimeEntity)
-                                    payload.time = entities.TimeEntity;
-                                type = apiConfig.seviceUrl[componentName].type;
+                            }
+                            if(sentence.indexOf("shared to me")>-1){
+                                console.log("shared to me");
+                                payload.action = "sharedBy";
+                            }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1 || sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1){
+                                console.log("shared to",sentence);
+                                payload.action = "sharedTo";
+                            }
+                            if(entities && entities.DateEntity)  {
+                                payload.fromaDate = new Date(entities.DateEntity);
+                                payload.toDate    = new Date();
+                            }
+                            if(entities && entities.TimeEntity)
+                                payload.time = entities.TimeEntity;
+                            type = apiConfig.seviceUrl[componentName].type;
                         }else if(componentName === 'Save_Bookmark_data'){
                                 url += apiConfig.seviceUrl[componentName].url;
                                 url = util.format(url, mappedkuid);
@@ -345,33 +365,29 @@ module.exports = {
                                 }
                                 type = apiConfig.seviceUrl[componentName].type;
                         }else if(componentName ==='ShareArticle'){
-                            url += apiConfig.seviceUrl[componentName].url;
-                            url = util.format(url, mappedkuid);
-                            var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
-                            context.session.BotUserSession.lastMessage.messagePayload.message.params);
-                            if(params && typeof params ==='string')
-                                params = JSON.parse(params);
-                            var inputData = context.userInputs.originalInput && context.userInputs.originalInput.sentence;
-                            var userIds = [];
-                            var emailIds = [];
-                            params.forEach(function(u){
-                                userIds.push(u.id);
-                                emailIds.push(u.emailId);
-                            })
-                            knowledgeIds = context.userInfo && context.userInfo.id;
-                            payload = {
-
-                                userIds      : userIds,
-                                knowledgeIds : [knowledgeIds]
-                            }
-                            type = apiConfig.seviceUrl[componentName].type;
+                                url += apiConfig.seviceUrl[componentName].url;
+                                kId= context.knowledgeId || (context.userInfo && context.userInfo.id);
+                                url = util.format(url, mappedkuid,kId);
+                                var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
+                                context.session.BotUserSession.lastMessage.messagePayload.message.params);
+                                if(params && typeof params ==='string')
+                                    params = JSON.parse(params);
+                                var users = [];
+                                params.forEach(function(u){
+                                    users.push({id: u.id, "type": "person", "privilege": 0});
+                                })
+                                knowledgeIds = context.knowledgeId || (context.userInfo && context.userInfo.id);
+                                payload = {
+                                    users      : users,
+                                }
+                                type = apiConfig.seviceUrl[componentName].type;
                         }else if(componentName === 'MeetingSlot'){
-                            url += apiConfig.seviceUrl[componentName].url;
-                            url = util.format(url, mappedkuid);
-                            var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
-                            context.session.BotUserSession.lastMessage.messagePayload.message.params);
-                            if(params && typeof params ==='string')
-                                params = JSON.parse(params);
+                                url += apiConfig.seviceUrl[componentName].url;
+                                url = util.format(url, mappedkuid);
+                                var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
+                                context.session.BotUserSession.lastMessage.messagePayload.message.params);
+                                if(params && typeof params ==='string')
+                                    params = JSON.parse(params);
 
                             var userIds = [];
                             params.invitees.forEach(function(e){
@@ -387,33 +403,34 @@ module.exports = {
                                 "duration"	: params.duration
                             }
                         }else if(componentName === 'PersonResolveHook'){
-			 url += apiConfig.seviceUrl[componentName].url;
-                         payload =  JSON.parse(context.requestData);
-                         type = apiConfig.seviceUrl[componentName].type;}
-			}else if(componentName === 'CreateEvent'){       
-                            url += apiConfig.seviceUrl[componentName].url
-                            url = util.format(url, mappedkuid);          
-                           var slotdata = context.slotdata;              
-                           var title = context.meetingdata.title;        
-                           var emails =  context.emailIds;               
-                           var allemails = [];                           
-                           if(emails){                              
-                                  emails.forEach(function(email){  
-                                  var emailObj = {};               
-                                  emailObj['email'] = email;       
-                                  allemails.push(emailObj);        
-                           });                                   
-                           type = apiConfig.seviceUrl[componentName].type
-                           payload = {                                   
-                              "endTime"       :       slotdata.endTime,
-                              "startTime"     :       slotdata.startTim
-                              "attendees"     :       allemails,       
-                              "title"         :       title            
-                           }                                        
-                         }
-                        serviceRequest(requestId, storeId, url, payload, type,headers);
-                        callback(null, new sdk.AsyncResponse());
-                });
+                                url += apiConfig.seviceUrl[componentName].url;
+                                payload =  JSON.parse(context.requestData);
+                                type = apiConfig.seviceUrl[componentName].type;
+			             }else if(componentName === 'CreateEvent') {
+                                url += apiConfig.seviceUrl[componentName].url
+                                url = util.format(url, mappedkuid);
+                                var slotdata = context.slotdata;
+                                var title = context.meetingdata.title;
+                                var emails = context.emailIds;
+                                var allemails = [];
+                                if (emails) {
+                                    emails.forEach(function (email) {
+                                        var emailObj = {};
+                                        emailObj['email'] = email;
+                                        allemails.push(emailObj);
+                                    });
+                                    type = apiConfig.seviceUrl[componentName].type
+                                    payload = {
+                                        "endTime": slotdata.endTime,
+                                        "startTime": slotdata.startTime,
+                                        "attendees": allemails,
+                                        "title": title
+                                    }
+                                }
+                        }
+                 serviceRequest(requestId, storeId, url, payload, type, headers);
+                 callback(null, new sdk.AsyncResponse());
+              });
 
     }
 };
