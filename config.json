@@ -7,7 +7,11 @@
     },
     "credentials": {
         "apikey": "test_api_key",
-        "appId": "test_app_id"
+        "appId": "test_app_id",
+        "st-67890":{
+            "apikey": "test_api_key2",
+            "appId": "test_app_id2"
+        }
     },
     "redis": {
         "options": {

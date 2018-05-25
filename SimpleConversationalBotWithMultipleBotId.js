@@ -1,4 +1,4 @@
-var botId = "st-12345";
+var botId = ["st-12345","st-67890"];
 var botName = "testBot";
 var sdk = require("./lib/sdk");
 

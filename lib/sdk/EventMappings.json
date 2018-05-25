@@ -32,5 +32,12 @@
         "ackImmediately"        : true,
         "sendComponentNameInArgs" : false,
         "processResponse"         : false
+    },
+    "on_alert": {
+        "payload_class_name"      : "OnAlertPayload",
+        "callback"                : "on_alert",
+        "ackImmediately"        : true,
+        "sendComponentNameInArgs" : false,
+        "processResponse"         : false
     }
 }
