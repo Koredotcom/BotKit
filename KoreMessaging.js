@@ -209,11 +209,18 @@ module.exports = {
                             url = util.format(url, mappedkuid);
                             var entities =context.entities;
                             var key_entity =entities.KeywordExtraction  && entities.KeywordExtraction.split(" ");
+                            var inputString = context.userInputs.originalInput.sentence;
+                            var  keyWord = sw.removeStopwords(inputString.split(" "));
+                            var regex = /(?:^|\W)#(\w+)(?!\w)/g, match, hashTags = [];
+                            while (match = regex.exec(inputString)) {
+                                hashTags.push(match[1]);
+                            }
                             payload = {
                                 type         : "knowledge",
                                 keywords     : key_entity,
                                 mappedkuid   : mappedkuid,
                                 streamId     : context.botid,
+                                hashTags     : hashTags,
                                 action       : action
                             }
                             var fileType  = {
