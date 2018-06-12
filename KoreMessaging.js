@@ -294,10 +294,18 @@ module.exports = {
                                 console.log("shared to",sentence);
                                 payload.action = "sharedTo";
                             }
-                            if(entities && entities.DateEntity)  {
-                                payload.fromaDate = new Date(entities.DateEntity);
-                                payload.toDate    = new Date();
+                            if(entities && entities.NewCompositeEntity){
+                                payload.timeRange= {};
+                                var de = entities.NewCompositeEntity.dateperiodentityformeeting;
+                                if(de && de.toDate){
+                                    payload.timeRange['fromDate'] = new Date(de.fromDate).getTime();
+                                    payload['timeRange']['toDate']    = new Date(de.toDate).getTime();
+                                }else {
+                                    payload['timeRange']['toDate'] = new Date().getTime();
+                                    payload['timeRange']['fromDate']    = new Date(de.fromDate).getTime();
+                                }
                             }
+
                             if(entities && entities.TimeEntity)
                                 payload.time = entities.TimeEntity;
                             type = apiConfig.seviceUrl[componentName].type;
