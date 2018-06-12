@@ -176,13 +176,32 @@ module.exports = {
                             url = util.format(url, mappedkuid);
                             var entities =context.entities;
                             var inputString = context.userInputs.originalInput.sentence;
-                            var  keyWord = sw.removeStopwords(inputString.split(" "));
+                            var inputArr = inputString.split(" ");
+                            var  keyWord = sw.removeStopwords(inputArr);
                             var regex = /(?:^|\W)#(\w+)(?!\w)/g, match, hashTags = [],tempHash = [];
                             while (match = regex.exec(inputString)) {
                                 hashTags.push(match[1]);
                                 tempHash.push("#"+match[1]);
                             }
-                            keyWord = _.difference(keyWord,tempHash)
+                            keyWord = _.difference(keyWord,tempHash);
+                     /*       var index = inputArr.indexOf("tag");
+                            if(index>-1){
+                                if(inputArr.length ===2){
+                                    if(index==0){
+                                        hashTags.push(inputArr[index+1])
+                                    }else{
+                                        hashTags.push(inputArr[index-1])
+                                    }
+                                }
+                                else if(index===inputArr.length-1){
+                                    hashTags.push(inputArr[index-1])
+                                }
+                                else if((sw.removeStopwords([inputArr[index-1]])).length>0){
+                                    hashTags.push(inputArr[index-1])
+                                }else{
+                                    hashTags.push(inputArr[index+1])
+                                }
+                            }*/
                             payload = {
                                 type : "knowledge",
                                 keywords : keyWord,
@@ -210,10 +229,23 @@ module.exports = {
                             var entities =context.entities;
                             var key_entity =entities.KeywordExtraction  && entities.KeywordExtraction.split(" ");
                             var inputString = context.userInputs.originalInput.sentence;
-                            var  keyWord = sw.removeStopwords(inputString.split(" "));
+                            var inputArr = inputString.split(" ");
+                            var  keyWord = sw.removeStopwords(inputArr);
                             var regex = /(?:^|\W)#(\w+)(?!\w)/g, match, hashTags = [];
                             while (match = regex.exec(inputString)) {
                                 hashTags.push(match[1]);
+                            }
+                            var index = inputArr.indexOf("tag");
+                            if(index>-1){
+                                console.log(inputArr ,index)
+                                if(index===inputArr.length-1){
+                                    hashTags.push(inputArr[index-1])
+                                }
+                               else if((sw.removeStopwords([inputArr[index-1]])).length>0){
+                                    hashTags.push(inputArr[index-1])
+                                }else{
+                                    hashTags.push(inputArr[index+1])
+                                }
                             }
                             payload = {
                                 type         : "knowledge",
