@@ -350,6 +350,7 @@ module.exports = {
                             }
                             type = apiConfig.seviceUrl[componentName].type;
 
+
                     }else if(componentName ==='Notify_Colleague'){
                         url += apiConfig.seviceUrl[componentName].url;
                         url = util.format(url, mappedkuid);
@@ -402,12 +403,32 @@ module.exports = {
                                 params = JSON.parse(params);
 
                             var userIds = [];
-                            params.invitees.forEach(function(e){
+
+			   console.log('MMMMMMMMMMMMMMMMEEEEEEEEEEEEEEEEEt', JSON.stringify(params), 'email ids ', JSON.stringify(context.emailIds));
+                           userIds.push(mappedkuid);
+ 
+			   params.invitees.forEach(function(e){
                                 userIds.push(e.id);
-                            })
+                            });
+			   console.log('uuuuuuuuuuuserids',userIds);
+
+			     /*var emails =  context.emailIds;
+
+                            var allemails = [];
+
+			
+                                if(emails){
+                                        emails.forEach(function(email){
+                                        var emailObj = {};
+					emailObj['type']='required';
+					emailObj['emailAddress']={'address':email};
+                                        allemails.push(emailObj);
+                                   });
+                                }*/
+
                             type = apiConfig.seviceUrl[componentName].type;
                             payload = {
-                                userIds      : userIds,//context.userIds
+                                "userIds"       : userIds,
                                 "title" 	: params.title,
                                 "slot"  	: params.slot,
                                 "type"  	: params.type,
@@ -497,6 +518,5 @@ module.exports = {
                     serviceRequest(requestId, storeId, url, payload, type, headers);
                     callback(null, new sdk.AsyncResponse());
               });
-
     }
 };
