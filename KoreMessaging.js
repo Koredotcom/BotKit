@@ -92,7 +92,7 @@ module.exports = {
     },
     on_webhook      : function(requestId, data, componentName, callback) {
         console.log("componentName===",componentName);
-        console.log("request data",JSON.stringify(data))
+        console.log("request data",JSON.stringify(data.context))
         var url = config.koraUrl + config.apiVersion;
         var type = "GET";
         var reqBody = {};
@@ -105,7 +105,6 @@ module.exports = {
                 "Authorization"   : token,
                 "Content-Type"    : "application/json"
             }
-            console.log("context.session.BotUserSession.lastMessage.messagePayload.message.customData--------",customData);
             var mappedkuid  = customData.kmUId;
             var order = context.order;
             var storeId = context.storeId;
@@ -255,7 +254,7 @@ module.exports = {
                                 hashTags     : hashTags,
                                 action       : action
                             }
-                            var fileType  = {
+                           /* var fileType  = {
                                 "image" :["pic","pics","screenshot","screenshots","photo","photos","photograph","photographs","picture"                                                ,"pictures","snapshot","snapshots","snap","snaps","pix","pixes","photostat","photocopy","photocopies"],
                                 "file" :["document","documents","doc","docs","spreadsheet","spreadsheets","excel sheet","work sheet","sheets"]
                             }
@@ -276,7 +275,13 @@ module.exports = {
                                     payload.componentMeta.push({ext:entities.AttachmentEntity});
                                 }
 
+                            }*/
+
+                            if(entities && entities.AttachmentEntity){
+                                payload.componentMeta= [];
+                                payload.componentMeta.push({type: entities.AttachmentEntity});
                             }
+
                             if(entities && entities.PersonEntity){
                                 payload.personEntity = {
                                     names : entities.PersonEntity,
