@@ -39,5 +39,12 @@
         "ackImmediately"        : true,
         "sendComponentNameInArgs" : false,
         "processResponse"         : false
+    },
+    "on_variable_update": {
+        "payload_class_name"      : "OnVariableUpdate",
+        "callback"                : "on_variable_update",
+        "ackImmediately"          : true,
+        "sendComponentNameInArgs" : false,
+        "processResponse"         : true
     }
 }

@@ -14,3 +14,4 @@ sdk.registerBot(require('./SimpleConversationalBotWithMultipleBotId.js'));
 sdk.registerBot(require('./GuessTheNumber.js'));
 sdk.registerBot(require('./BookACab.js'));
 sdk.registerBot(require('./OrderAPizza.js'));
+sdk.registerBot(require('./BotVariables.js'));

@@ -24,5 +24,6 @@
         "mockServicesHost"  : "http://localhost:8004"
     },
     "liveagentlicense": "8947569",
-    "supportsMessageAck": true
+    "supportsMessageAck": true,
+    "languages":["en","de"]
 }
