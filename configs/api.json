@@ -67,7 +67,12 @@
     "ContactData" : {
         "url":"ka/users/%s/calendar/getProfile",
         "type":"POST"
+    },
+    "MeetingLookupHook":{
+        "url" :"ka/users/%s/calendar/meetingdetails",
+        "type" :"GET"
     }
+
 
   }
 }

@@ -394,127 +394,137 @@ module.exports = {
                         }
                         type = apiConfig.seviceUrl[componentName].type;
 
-                        }else if(componentName === 'MeetingSlot'){
-                            url += apiConfig.seviceUrl[componentName].url;
-                            url = util.format(url, mappedkuid);
-                            var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
-                                         context.session.BotUserSession.lastMessage.messagePayload.message.params);
-                            if(params && typeof params ==='string')
-                                params = JSON.parse(params);
-
-                            var userIds = [];
-
-			   console.log('MMMMMMMMMMMMMMMMEEEEEEEEEEEEEEEEEt', JSON.stringify(params), 'email ids ', JSON.stringify(context.emailIds));
-                           userIds.push(mappedkuid);
- 
-			   params.invitees.forEach(function(e){
-                                userIds.push(e.id);
-                            });
-			   console.log('uuuuuuuuuuuserids',userIds);
-
-			     /*var emails =  context.emailIds;
-
-                            var allemails = [];
-
-			
-                                if(emails){
-                                        emails.forEach(function(email){
-                                        var emailObj = {};
-					emailObj['type']='required';
-					emailObj['emailAddress']={'address':email};
-                                        allemails.push(emailObj);
-                                   });
-                                }*/
-
-                            type = apiConfig.seviceUrl[componentName].type;
-                            payload = {
-                                "userIds"       : userIds,
-                                "title" 	: params.title,
-                                "slot"  	: params.slot,
-                                "type"  	: params.type,
-                                "when"  	: params.when,
-                                "duration"	: params.duration
-                            }
-
-                        }else if(componentName === 'PersonResolveHook'){
-                            url += apiConfig.seviceUrl[componentName].url;
-                            payload =  JSON.parse(context.requestData);
-                            type = apiConfig.seviceUrl[componentName].type;
-
-			             }else if(componentName === 'CreateEvent') {
-                            url += apiConfig.seviceUrl[componentName].url
-                            url = util.format(url, mappedkuid);
-                            var slotdata = context.slotdata;
-                            var title = context.meetingdata.title;
-                            var emails = context.emailIds;
-                            var allemails = [];
-                            if (emails) {
-                                emails.forEach(function (email) {
-                                    var emailObj = {};
-                                    emailObj['email'] = email;
-                                    allemails.push(emailObj);
-                                });
-                                type = apiConfig.seviceUrl[componentName].type
-                                payload = {
-                                    "endTime": slotdata.endTime,
-                                    "startTime": slotdata.startTime,
-                                    "attendees": allemails,
-                                    "title": title
-                                }
-                            }
-
-                        }else if(componentName === 'GetDriveData'){
-                            var action = context.entities.ActionEntity;
-                            var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
-                            url += apiConfig.seviceUrl[componentName].url;
-                            url = util.format(url, mappedkuid);
-                            var name  = context.entities.PersonEntity;
-                            var keyword = context.entities.KeyWordEntity;
-                            var docType = context.entities.DocumentType;
-                            var dateEntity = context.entities.DateCompositEntity;
-                            var fromDate,toDate;
-                            if(dateEntity){
-                                if(dateEntity.Date_Period){
-                                    fromDate = dateEntity.Date_Period.fromDate;
-                                    toDate   = dateEntity.Date_Period.toDate;
-                                }else if(dateEntity.Date_Time){
-                                    fromDate = dateEntity.Date_Time;
-                                    toDate = dateEntity.Date_Time;
-                                }
-                                else if(dateEntity.DateEntity){
-                                    fromDate = dateEntity.DateEntity;
-                                    toDate = dateEntity.DateEntity;
-                                }
-                                fromDate = new Date(fromDate).toISOString();
-                                var date = new Date(toDate);
-                                toDate = new Date(date.setDate(date.getDate()+1)).toISOString();
-                            }
-                            if(sentence.indexOf("shared to me")>-1){
-                                action = "SharedBy";
-                            }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1 || sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1 || sentence.indexOf("shared by me")>-1){
-                                action = "SharedTo";
-                            }
-
-                            payload = {
-                                person  : name,
-                                keyword : keyword,
-                                docType : docType,
-                                mappedkuid : mappedkuid,
-                                streamId : context.botid,
-                                fromDate  : fromDate,
-                                toDate : toDate,
-                                action  :action
-                            }
-                            type = apiConfig.seviceUrl[componentName].type;
-
-                        }else if(componentName === 'ContactData'){
-                            url += apiConfig.seviceUrl[componentName].url;
-                            url = util.format(url, mappedkuid);
-                            payload = {
-                                "email":context.emailIds || []
-                            }
-                            type = apiConfig.seviceUrl[componentName].type;
+                    }else if(componentName === 'MeetingSlot'){
+                        url += apiConfig.seviceUrl[componentName].url;
+                        url = util.format(url, mappedkuid);
+                        var personsInfo = context.session.BotUserSession.personResolveResponse;
+                        var userIds = [];
+                        userIds.push(mappedkuid);
+                        personsInfo.forEach(function(e){
+                            userIds.push(e.id); 
+                        })   
+                        type = apiConfig.seviceUrl[componentName].type;
+                        payload = {
+                            "userIds"       : userIds,
+                            "title"     : params.title,
+                            "slot"      : params.slot,
+                            "type"      : params.type,
+                            "when"      : params.when,
+                            "duration"  : 30
                         }
+                    }else if(componentName === 'PersonResolveHook'){
+                        url += apiConfig.seviceUrl[componentName].url;
+                        payload =  JSON.parse(context.requestData);
+                        type = apiConfig.seviceUrl[componentName].type;
+		            }else if(componentName === 'CreateEvent'){
+                        url += apiConfig.seviceUrl[componentName].url;
+                        url = util.format(url, mappedkuid);
+                        var slotdata = context.slotdata;  
+                        var allemails = [];
+                        context.meetingdata.invitees.forEach(function(e){
+                            allemails.push(e.emailId);
+                        });
+                        type = apiConfig.seviceUrl[componentName].type;     
+                        payload = {
+                            "endTime"    :   Number(slotdata.endTime),
+                            "startTime"  :   Number(slotdata.startTime),
+                            "attendees"  :   allemails,
+                             "title"     :   context.meetingdata.title   
+                        }
+                    }else if(componentName === 'GetDriveData'){
+                    var action = context.entities.ActionEntity;
+                    var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
+                    url += apiConfig.seviceUrl[componentName].url;
+                    url = util.format(url, mappedkuid);
+                    var name  = context.entities.PersonEntity;
+                    var keyword = context.entities.KeyWordEntity;
+                    var docType = context.entities.DocumentType;
+                    var dateEntity = context.entities.DateCompositEntity;
+                    var fromDate,toDate;
+                    if(dateEntity){
+                        if(dateEntity.Date_Period){
+                            fromDate = dateEntity.Date_Period.fromDate;
+                            toDate   = dateEntity.Date_Period.toDate;
+                        }else if(dateEntity.Date_Time){
+                            fromDate = dateEntity.Date_Time;
+                            toDate = dateEntity.Date_Time;
+                        }
+                        else if(dateEntity.DateEntity){
+                            fromDate = dateEntity.DateEntity;
+                            toDate = dateEntity.DateEntity;
+                        }
+                        fromDate = new Date(fromDate).toISOString();
+                        var date = new Date(toDate);
+                        toDate = new Date(date.setDate(date.getDate()+1)).toISOString();
+                    }
+                    if(sentence.indexOf("shared to me")>-1){
+                        action = "SharedBy";
+                    }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1 || sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1 || sentence.indexOf("shared by me")>-1){
+                        action = "SharedTo";
+                    }
+
+                    payload = {
+                        person  : name,
+                        keyword : keyword,
+                        docType : docType,
+                        mappedkuid : mappedkuid,
+                        streamId : context.botid,
+                        fromDate  : fromDate,
+                        toDate : toDate,
+                        action  :action
+                    }
+                    type = apiConfig.seviceUrl[componentName].type;
+
+                    }else if(componentName === 'ContactData'){
+                        url += apiConfig.seviceUrl[componentName].url;
+                        url = util.format(url, mappedkuid);
+                        payload = {
+                            "email":context.emailIds || []
+                        }
+                        type = apiConfig.seviceUrl[componentName].type;
+                    }else if(componentName == 'MeetingLookupHook'){
+                        url += apiConfig.seviceUrl[componentName].url;
+                        url = util.format(url, mappedkuid);
+                        var keyword  = (context.entities.KeywordExtraction && context.entities.KeywordExtraction) || "";
+                        var dateCompositeEnt = context.entities.NewCompositeEntity;
+                        var dateMin = "",dateTime,dateMax="";
+                        if(dateCompositeEnt){
+                            dateMin = (dateCompositeEnt.dateperiodentityformeeting && dateCompositeEnt.dateperiodentityformeeting.fromDate) 
+                                        || dateCompositeEnt.datetimeformeeting;
+                            dateTime =  dateCompositeEnt.datetimeformeeting; 
+                            dateMax =  (dateCompositeEnt.dateperiodentityformeeting && dateCompositeEnt.dateperiodentityformeeting.toDate) 
+                                        ||  dateTime? getNext15Mins(dateTime):"";
+
+                        }
+                         
+                        var startHour= dateTime ? new Date(dateTime).getHours() : 9; 
+                        var minutes  = dateTime  ? new Date(dateTime).getMinutes() : 0;
+                        var singleEvent = ((context.entities && context.entities.NextImmediateList) || dateTime ) ? true:false; 
+
+                        if(dateMin && !dateMax) {
+                            dateMax = dateMin;
+                            var max = new Date(dateMax);
+                            max.setHours(17);
+                            dateMax = max.getTime();                        
+                        }
+
+                        var emails   =  context.emailIds||[];
+                        emails = emails.join('&');
+
+                        type = apiConfig.seviceUrl[componentName].type;
+                        payload = {
+                            "emails"          : emails,
+                            "starttime"       : new Date(dateMin).getTime(),
+                            "endtime"         : new Date(dateMax).getTime(),
+                            "keyword"         : keyword,
+                            "singleEvent"     : singleEvent,
+                            "startHour"       : startHour,
+                            "minutes"         : minutes,
+                            "dateTimeSingle"  : dateTime?true:false
+                        }
+                        console.log('Meeting Lookup :::::::::::::::::::::::::::::', JSON.stringify(payload));
+                    }
+
                     serviceRequest(requestId, storeId, url, payload, type, headers);
                     callback(null, new sdk.AsyncResponse());
               });
