@@ -20,7 +20,7 @@
             "password": "redis-pwd"
 
         },
-        "available": false
+        "available": true
     },
     "examples" : {
         "mockServicesHost"  : "http://localhost:8004"

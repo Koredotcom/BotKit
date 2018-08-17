@@ -1,64 +1,73 @@
 {
   "seviceUrl":{
     "GETMEMBERDATA" :{
-      "url" : "teams/:teamId/topics/:topicId/posts/:postId",
-      "type" :"GET"
+        "url" : "teams/:teamId/topics/:topicId/posts/:postId",
+        "type" :"GET"
     },
     "GetUserInfo":{
-      "url" :"ka/users/%s/koraEntity",
-      "type" :"POST"
+        "url" :"ka/users/%s/koraEntity",
+        "type" :"POST"
     },
     "GETUSERDETAILS":{
-      "url" :"ka/users/%s/koraEntity",
-      "type" :"POST"
+        "url" :"ka/users/%s/koraEntity",
+        "type" :"POST"
     },
     "Save_Knowledge_data" :{
-      "url" :"ka/users/%s/knowledge",
-      "type" :"POST"
+        "url" :"ka/users/%s/knowledge",
+        "type" :"POST"
     },
     "Save_Bookmark_data":{
-      "url" :"ka/users/%s/bookmark",
-      "type" :"POST"
+        "url" :"ka/users/%s/bookmark",
+        "type" :"POST"
     },
     "GetBookmarksData" : {
-      "url" :"ka/users/%s/bookmark/recent?limit=5",
-      "type" :"GET"
+        "url" :"ka/users/%s/bookmark/recent?limit=5",
+        "type" :"GET"
     },
     "SearchKnowledgeData" : {
-      "url" :"ka/users/%s/knowledge/resolve",
-      "type" :"POST"
+        "url" :"ka/users/%s/knowledge/resolve",
+        "type" :"POST"
     },
     "GetKnowledge": {
-      "url" :"ka/users/%s/knowledge/resolve",
-      "type" :"POST"
+        "url" :"ka/users/%s/knowledge/resolve",
+        "type" :"POST"
     },
     "GetEmailInfo" : {
-      "url" :"ka/users/%s/emails/search",
-      "type" :"POST"
+        "url" :"ka/users/%s/emails/search",
+        "type" :"POST"
     },
     "Reminderhook": {
-      "url" :"ka/users/%s/reminder",
-      "type" :"POST"
+        "url" :"ka/users/%s/reminder",
+        "type" :"POST"
     },
     "Notify_Colleague" :{
-      "url" :"ka/users/%s/question",
-      "type" :"POST"
+        "url" :"ka/users/%s/question",
+        "type" :"POST"
     },
     "ShareArticle" : {
-      "url" :"ka/users/%s/knowledge/%s/share",
-      "type" :"POST"
+        "url" :"ka/users/%s/knowledge/%s/share",
+        "type" :"POST"
     },
     "MeetingSlot":{
-      "url" :"ka/users/%s/calendar/freebusyslots",
-      "type" :"POST"
+        "url" :"ka/users/%s/calendar/freebusyslots",
+        "type" :"POST"
     },                                                                  
    "CreateEvent":{                                                      
-      "url"  :"ka/users/%s/calendar/createevents",                       
-      "type" :"POST"                                                    
+        "url"  :"ka/users/%s/calendar/createevents",
+        "type" :"POST"
    },                                                                  
    "PersonResolveHook":{                                               
-      "url"  :"search/KAUsers?",                                    
-      "type" :"POST"                                                    
-   } 
+        "url"  :"search/KAUsers?",
+        "type" :"POST"
+   },
+   "GetDriveData" : {
+        "url" :"ka/users/%s/drive/search",
+        "type" :"POST"
+    },
+    "ContactData" : {
+        "url":"ka/users/%s/calendar/getProfile",
+        "type":"POST"
+    }
+
   }
 }
