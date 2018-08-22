@@ -69,10 +69,9 @@
         "type":"POST"
     },
     "MeetingLookupHook":{
-        "url" :"ka/users/%s/calendar/meetingdetails",
+        "url" :"ka/users/%s/calendar/getEvents",
         "type" :"GET"
     }
-
 
   }
 }
