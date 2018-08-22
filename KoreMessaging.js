@@ -452,21 +452,31 @@ module.exports = {
                         url = util.format(url, mappedkuid);
                         payload =  {"name": context.session.BotUserSession.persons};
                         type = apiConfig.seviceUrl[componentName].type;
-		            }else if(componentName === 'CreateEvent'){
-                        url += apiConfig.seviceUrl[componentName].url;
-                        url = util.format(url, mappedkuid);
-                        var slotdata = context.slotdata;  
-                        var allemails = [];
-                        context.meetingdata.invitees.forEach(function(e){
-                            allemails.push(e.emailId);
-                        });
-                        type = apiConfig.seviceUrl[componentName].type;     
-                        payload = {
-                            "endTime"    :   Number(slotdata.endTime),
-                            "startTime"  :   Number(slotdata.startTime),
-                            "attendees"  :   allemails,
-                             "title"     :   context.meetingdata.title   
-                        }
+		    }else if(componentName === 'CreateEvent'){
+			   url += apiConfig.seviceUrl[componentName].url;
+                           url = util.format(url, mappedkuid);
+                           var slotdata = context.slotdata;
+                           var title =  context.entities.KeywordExtraction || context.entities.NeedTitle;
+
+                           var allemails = [];
+                           var personsInfo = context.session.BotUserSession.personResolveResponse;
+
+                                personsInfo.forEach(function(e){
+                                var emailObj = {};
+                                emailObj['email'] = e.emailId;
+                                allemails.push(emailObj);
+                            });
+
+
+                           type = apiConfig.seviceUrl[componentName].type;
+
+                           payload = {
+                                "endTime"       :       Number(slotdata.endTime),
+                                "startTime"     :       Number(slotdata.startTime),
+                                "attendees"     :       allemails,
+                                "title"         :       title
+                                }
+
                     }else if(componentName === 'GetDriveData'){
                     var action = context.entities.ActionEntity;
                     var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
