@@ -566,3 +566,32 @@ module.exports = {
               });
     }
 };
+
+function getNext15Mins(_dt){
+        if(_dt){
+                var dt = new Date(_dt);
+                return dt.getTime()+900000;
+        }else{
+                return '';
+        }
+}
+
+function daysdifference(date1, date2) {
+
+            var ONEDAY = 1000 * 60 * 60 * 24;
+
+            var date1_ms = date1.getTime();
+            var date2_ms = date2.getTime();
+
+            var difference_ms = Math.abs(date1_ms - date2_ms);
+
+            return Math.round(difference_ms/ONEDAY);
+}
+
+function setHMSTime(d,h,m,s)
+{
+     d.setHours(h);
+     d.setMinutes(m);
+     d.setSeconds(s);
+    return d;
+}
