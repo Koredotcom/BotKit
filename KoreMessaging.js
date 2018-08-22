@@ -395,26 +395,62 @@ module.exports = {
                         type = apiConfig.seviceUrl[componentName].type;
 
                     }else if(componentName === 'MeetingSlot'){
-                        url += apiConfig.seviceUrl[componentName].url;
-                        url = util.format(url, mappedkuid);
-                        var personsInfo = context.session.BotUserSession.personResolveResponse;
-                        var userIds = [];
-                        userIds.push(mappedkuid);
-                        personsInfo.forEach(function(e){
-                            userIds.push(e.id); 
-                        })   
-                        type = apiConfig.seviceUrl[componentName].type;
-                        payload = {
-                            "userIds"       : userIds,
-                            "title"     : params.title,
-                            "slot"      : params.slot,
-                            "type"      : params.type,
-                            "when"      : params.when,
-                            "duration"  : 30
+                         url += apiConfig.seviceUrl[componentName].url;
+                         url = util.format(url, mappedkuid);
+
+                         var personsInfo = context.session.BotUserSession.personResolveResponse;
+
+                         var title  = (context.entities.KeywordExtraction && context.entities.KeywordExtraction) || "";
+
+                         var dateCompositeEntity = context.entities.NewCompositeEntity;
+
+                         var dateMin = '',dateMax = '', dateTime;
+                        if(dateCompositeEntity){
+                                dateMin  = (dateCompositeEntity.dateperiodentityformeeting &&  dateCompositeEntity.dateperiodentityformeeting.fromDate) || (dateCompositeEntity.datetimeformeeting) || (dateCompositeEntity.dateonlyentity);
+                                dateMax  =  (dateCompositeEntity.dateperiodentityformeeting && dateCompositeEntity.dateperiodentityformeeting.toDate);
+                                dateTime =  dateCompositeEntity.datetimeformeeting;
                         }
+
+                        if(dateMin) {
+                                        var min = new Date(dateMin);
+                                        min.setHours(dateTime?new Date(dateTime).getHours():9);
+                                        min.setMinutes(dateTime?new Date(dateTime).getMinutes():0);
+                                        min.setSeconds(dateTime?new Date(dateTime).getSeconds():0);
+                                        dateMin = min.getTime();
+                        }
+
+                        if(dateMin && !dateMax) {
+                                        dateMax = dateMin;
+                                        var max = new Date(dateMax);
+                                        max.setHours(17);
+                                        max.setMinutes(0);
+                                        max.setSeconds(0);
+                                        dateMax = max.getTime();
+                        }
+
+                           var userIds = [];
+                           userIds.push(mappedkuid);
+
+                           personsInfo.forEach(function(e){
+                                userIds.push(e.emailId);//EARLIER e.id
+                            });
+
+                           var nDays = daysdifference(new Date(dateMax),new Date(dateMin));
+
+                            type = apiConfig.seviceUrl[componentName].type;
+                            payload = {
+                                "userIds"       : userIds,
+                                "title"         : title,
+                                "slot"          : { starttime: new Date(dateMin).getTime(), endtime: nDays>0 ? setHMSTime(new Date(dateMin),17,0,0).getTime()  : new Date(dateMax).getTime() },
+                                "type"          : 'Test Dummy type',
+                                "when"          : { starttime: new Date(dateMin).getTime(), endtime: new Date(dateMax).getTime() },
+                                "duration"      : 30
+                            }
+
                     }else if(componentName === 'PersonResolveHook'){
                         url += apiConfig.seviceUrl[componentName].url;
-                        payload =  JSON.parse(context.requestData);
+                        url = util.format(url, mappedkuid);
+                        payload =  {"name": context.session.BotUserSession.persons};
                         type = apiConfig.seviceUrl[componentName].type;
 		            }else if(componentName === 'CreateEvent'){
                         url += apiConfig.seviceUrl[componentName].url;
