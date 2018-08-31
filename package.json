@@ -81,7 +81,8 @@
     "varify": "^0.1.1",
     "vary": "^1.1.0",
     "wordwrap": "^0.0.3",
-    "stopword": "^0.1.9"
+    "stopword": "^0.1.9",
+    "moment-timezone": "^0.5.21"
   },
   "devDependencies": {},
   "scripts": {
