@@ -512,11 +512,10 @@ module.exports = {
                     var title  = (context.entities.KeywordExtraction && context.entities.KeywordExtraction) || "";
 
                     var dateMin, dateMax, dateTime;
-                    var contextMeta = context.session.BotUserSession.lastMessage.messagePayload.meta;
-                    var timeZone = context.timezone ? context.timezone : (contextMeta && contextMeta.timezone);
+                    var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ) ||
+                                   (context.session.BotUserSession.lastMessage.messagePayload.meta && context.session.BotUserSession.lastMessage.messagePayload.meta.timezone) ||  "Asia/Kolkata"; 
                     var dateEntity = context.entities.NewCompositeEntity;
                     var orgEmailId = context.session && context.session.UserContext && context.session.UserContext.emailId;
-
 
                     if(dateEntity){
                         var datePeriod = dateEntity.dateperiodentityformeeting;
@@ -529,29 +528,13 @@ module.exports = {
                             dateMin = dateEntity.datetimeformeeting;
                         }
                         dateTime = dateEntity.datetimeformeeting;
-
                     }
 
-                    if(dateMin) {
-                        dateMin = new Date(dateMin);
-                    } else {
-                        dateMin = new Date();
-                    }
-
-                    dateMin.setHours(dateTime?new Date(dateTime).getHours():9);
-                    dateMin.setMinutes(dateTime?new Date(dateTime).getMinutes():0);
-                    dateMin.setSeconds(dateTime?new Date(dateTime).getSeconds():0);
+                    var stHour = dateTime ? String(utility.getDateTimeByZone(new Date(dateTime),timeZone,'HHmm')) : '0900';
 
                     if(dateMin && !dateMax) {
-                        var max = new Date(dateMin);
-                        max.setHours(17);
-                        max.setMinutes(0);
-                        max.setSeconds(0);
-                        dateMax = max.getTime();
+                        dateMax = dateMin;
                     }
-
-                    //var timeZone = context.session.BotUserSession.lastMessage.messagePayload.meta.timezone;
-                    //console.log('TIME ZONEEEEEEEEEEEEEEEEEEE', timeZone);
 
                     var userIds = [];
                     userIds.push(mappedkuid);
@@ -566,11 +549,11 @@ module.exports = {
                     type = apiConfig.seviceUrl[componentName].type;
                     payload = {
                         "userIds"       : userIds,
-                        "title" 	: title,
-                        "slot"  	: { starttime: new Date(dateMin).getTime(), endtime: nDays>0 ? setHMSTime(new Date(dateMin),17,0,0).getTime()  : new Date(dateMax).getTime() },
-                        "type"  	: 'Test Dummy type',
-                        "when"  	: { starttime: new Date(dateMin).getTime(), endtime: new Date(dateMax).getTime() },
-                        "duration"	: 30
+                        "title" 	    : title,
+                        "slot"  	    : { starttime: new Date(dateMin).getTime(), endtime: nDays>0 ? setHMSTime(new Date(dateMin),17,0,0).getTime()  : new Date(dateMax).getTime() },
+                        "type"  	    : 'Test Dummy type',
+                        "when"  	    : { starttime: dateMin, endtime: dateMax },
+                        "duration"	    : 30
                     }
                 }else if(componentName === 'PersonResolveHook'){
                     url += apiConfig.seviceUrl[componentName].url;
@@ -609,13 +592,23 @@ module.exports = {
                     var dateCompositeEnt = context.entities.NewCompositeEntity;
                     var dateMin = "",dateTime,dateMax="";
                     if(dateCompositeEnt){
-                        dateMin = (dateCompositeEnt.dateperiodentityformeeting && dateCompositeEnt.dateperiodentityformeeting.fromDate)
-                                    || dateCompositeEnt.datetimeformeeting;
-                        dateTime =  dateCompositeEnt.datetimeformeeting;
-                        dateMax =  (dateCompositeEnt.dateperiodentityformeeting && dateCompositeEnt.dateperiodentityformeeting.toDate)
-                                    ||  dateTime? getNext15Mins(dateTime):"";
-
+                        var datePeriod = dateCompositeEnt.dateperiodentityformeeting;
+                        if(datePeriod) {
+                                dateMin = datePeriod.fromDate;
+                                dateMax = datePeriod.toDate;
+                        } else if(dateCompositeEnt.dateonlyentity) {
+                                dateMin = dateCompositeEnt.dateonlyentity;
+                        }else{
+                                dateMin = dateCompositeEnt.datetimeformeeting;
+                        }
+                        dateTime = dateCompositeEnt.datetimeformeeting;
                     }
+                    if(dateMin) {
+                            dateMin = new Date(dateMin);
+                    } else {
+                            dateMin = new Date();
+                    }
+
 
                     var startHour= dateTime ? new Date(dateTime).getHours() : 9;
                     var minutes  = dateTime  ? new Date(dateTime).getMinutes() : 0;
@@ -627,10 +620,13 @@ module.exports = {
                         max.setHours(17);
                         dateMax = max.getTime();
                     }
+                    var personsInfo = context.session.BotUserSession.personResolveResponse || [];
+                    var emails   =  [];
+                    personsInfo.forEach(function(e){
+                            emails.push(e.emailId);
+                    });
 
-                    var emails   =  context.emailIds||[];
                     emails = emails.join('&');
-
                     payload = {
                         "emails"          : emails,
                         "starttime"       : new Date(dateMin).getTime(),
