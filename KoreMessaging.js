@@ -530,8 +530,6 @@ module.exports = {
                         dateTime = dateEntity.datetimeformeeting;
                     }
 
-                    var stHour = dateTime ? String(utility.getDateTimeByZone(new Date(dateTime),timeZone,'HHmm')) : '0900';
-
                     if(dateMin && !dateMax) {
                         dateMax = dateMin;
                     }
@@ -550,8 +548,6 @@ module.exports = {
                     payload = {
                         "userIds"       : userIds,
                         "title" 	    : title,
-                        "slot"  	    : { starttime: new Date(dateMin).getTime(), endtime: nDays>0 ? setHMSTime(new Date(dateMin),17,0,0).getTime()  : new Date(dateMax).getTime() },
-                        "type"  	    : 'Test Dummy type',
                         "when"  	    : { starttime: dateMin, endtime: dateMax },
                         "duration"	    : 30
                     }
@@ -591,6 +587,8 @@ module.exports = {
                     var keyword  = (context.entities.KeywordExtraction && context.entities.KeywordExtraction) || "";
                     var dateCompositeEnt = context.entities.NewCompositeEntity;
                     var dateMin = "",dateTime,dateMax="";
+                    var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ) ||
+                                   (context.session.BotUserSession.lastMessage.messagePayload.meta && context.session.BotUserSession.lastMessage.messagePayload.meta.timezone) ||  "Asia/Kolkata"; 
                     if(dateCompositeEnt){
                         var datePeriod = dateCompositeEnt.dateperiodentityformeeting;
                         if(datePeriod) {
@@ -609,16 +607,10 @@ module.exports = {
                             dateMin = new Date();
                     }
 
-
-                    var startHour= dateTime ? new Date(dateTime).getHours() : 9;
-                    var minutes  = dateTime  ? new Date(dateTime).getMinutes() : 0;
                     var singleEvent = ((context.entities && context.entities.NextImmediateList) || dateTime ) ? true:false;
 
                     if(dateMin && !dateMax) {
                         dateMax = dateMin;
-                        var max = new Date(dateMax);
-                        max.setHours(17);
-                        dateMax = max.getTime();
                     }
                     var personsInfo = context.session.BotUserSession.personResolveResponse || [];
                     var emails   =  [];
@@ -629,13 +621,12 @@ module.exports = {
                     emails = emails.join('&');
                     payload = {
                         "emails"          : emails,
-                        "starttime"       : new Date(dateMin).getTime(),
-                        "endtime"         : new Date(dateMax).getTime(),
+                        "starttime"       : utility.getDateTimeByZone(new Date(dateMin),timeZone,'YYYY-MM-DD'),
+                        "endtime"         : utility.getDateTimeByZone(new Date(dateMax),timeZone,'YYYY-MM-DD'),
                         "keyword"         : keyword,
                         "singleEvent"     : singleEvent,
-                        "startHour"       : startHour,
-                        "minutes"         : minutes,
-                        "dateTimeSingle"  : dateTime?true:false
+                        "dateTimeSingle"  : dateTime ? true:false,
+                        "timeZone"        : timeZone  
                     }
                     type = apiConfig.seviceUrl[componentName].type;
 
