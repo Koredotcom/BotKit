@@ -1,4 +1,3 @@
-
 var botName        = "KoraAssistantNew";
 var sdk            = require("./lib/sdk");
 var Promise        = sdk.Promise;
@@ -23,7 +22,7 @@ var inviteesEmailIds = [];
  * var url = botsHookConfig.baseUrl + botsHookConfig.apiVersion + "/users/%s/builder/streams/" + streamId + '/ignoreuser';
  url = util.format(url, _userId);
  */
-function serverCall(requestId, storeId, url , payLoad, type, headers,  callbacks) {
+function serviceRequestData(requestId, storeId, url , payLoad, type, headers,  callbacks) {
     var userId = payLoad.mappedkuid;
     var name = payLoad.user;
     var getprofileUrl = url;
@@ -37,7 +36,7 @@ function serverCall(requestId, storeId, url , payLoad, type, headers,  callbacks
             url        : getprofileUrl ,
             method     : type,
             body       : payLoad,
-	    json       : true,	
+            json       : true,
             headers    : headers
         }, function(err, res) {
             if (err ||(res.statusCode !==200 && !res.body)) {
@@ -60,22 +59,24 @@ function serverCall(requestId, storeId, url , payLoad, type, headers,  callbacks
 function onSuccessServiceCall(requestId,callbackData, resBody) {
     sdk.getSavedData(requestId)
         .then(function(data) {
-            console.log("response data === ",JSON.stringify(resBody),'-----',typeof(resBody));
+            console.log("response data === ",JSON.stringify(resBody),'-----',typeof(resBody) );
             data.context['userInfo']= resBody;
-	        data.context.successful = true;
+            data.context.successful = true;
             if(resBody && resBody.errors){
-            	data.context.successful = false;
-	        }
+                data.context.successful = false;
+            }
+
             sdk.respondToHook(data);
         });
 }
 
-function prepareName(al, meetingData, allU) {
+function prepareName(al, meetingData, allU){
     var nameList = "",emailIds = [];
     var len = al.length;
     for(var i=0; i<len; i++){
         if(al[i]  != meetingData.owner.id){
-            var nObj = allU[al[i]];
+            var alU = al[i].indexOf('@') >-1 ? al[i].replace(/\./g,"-") : al[i];
+            var nObj = allU[alU];
             inviteesEmailIds.push(nObj.emailId)
             var nm =nObj && nObj.name.split(" ")[0];
             if(i<(len-1))
@@ -88,34 +89,33 @@ function prepareName(al, meetingData, allU) {
     return nameList;
 }
 
-function prepareTemplateData(meetingData, context, timeZone) {
+function prepareTemplateData(meetingData, context, timeZone){
     var meetingData = meetingData;
     var msg = "", buttons = [], count = 0;
-	if(meetingData){
+    if(meetingData){
         meetingData.slots && meetingData.slots.forEach(function(slot){
             var button =  {
-			    "content_type":"postback",
+                "content_type":"postback",
                 "title":"",
-            	"payload":""
-        	}
-       		var format = "ddd, MMM D, h:mm A";
-      		 if(slot.al){
-           	     count ++ ;
-                 msg += String(count) + ". " ;
-                 msg += utility.getDateTimeByZone(new Date(slot.start),timeZone,format) + " - ";
-                 msg +=  utility.getDateTimeByZone(new Date(slot.end), timeZone, "h:mm A") + "\n";
-                 msg +=  prepareName(slot.al, meetingData, meetingData.allU);
+                "payload":""
+            }
+            var format = "ddd, MMM D, h:mm A";
+            if(slot.al){
+                count ++ ;
+                msg += String(count) + ". " ;
+                msg += utility.getDateTimeByZone(new Date(slot.start),timeZone,format) + " - "
+                msg +=  utility.getDateTimeByZone(new Date(slot.end), timeZone, "h:mm A") + "\n";
+                msg +=  prepareName(slot.al, meetingData, meetingData.allU);
 
-                 if(slot.al.length==0 ||(slot.al.length==1 && slot.al[0]==meetingData.owner.id)){
-                     msg += " You are attending. \n"
-                 }else{
-                     msg += " and You are attending. \n";
-                 }
-
-                 button.title ="Schedule for Slot "+ count;
-                 button.payload = slot.start + "_" +slot.end;
-                 buttons.push(button);
-             }
+                if(slot.al.length==0 ||(slot.al.length==1 && slot.al[0]==meetingData.owner.id)){
+                    msg += " You are attending. \n"
+                }else{
+                    msg += " and You are attending. \n"
+                }
+                button.title ="Schedule for Slot "+ count;
+                button.payload = slot.start + "_" +slot.end;
+                buttons.push(button);
+            }
         })
         if(meetingData.dU.length>0){
             msg +="People who declined: \n";
@@ -125,23 +125,23 @@ function prepareTemplateData(meetingData, context, timeZone) {
             msg +=  "People who did not respond: \n";
             msg += prepareName(meetingData.pU, meetingData, meetingData.allU);
         }
-
         buttons.push({"content_type":"postback","title":"Cancel Meeting","payload":"CANCEL"});
         buttons.push({"content_type":"postback","title":"Skip","payload":"SKIP"});
         context['emailIds'] = inviteesEmailIds;
         inviteesEmailIds = [];
-
         message = {
             "type":"template",
             "payload":{
                 "text":msg,
                 "template_type":"quick_replies",
-            	 "quick_replies":buttons
+                "quick_replies":buttons
             }
         }
         context['templateData'] = message;
+
     }
     return context;
+
 }
 
 function onSuccessCall(requestId,callbackData, resBody) {
@@ -153,11 +153,11 @@ function onSuccessCall(requestId,callbackData, resBody) {
             if(resBody && resBody.errors){
                 data.context.successful = false;
             }else{
-                var contextMeta = data.context.session.BotUserSession.lastMessage.messagePayload.meta;
-                var timeZone = data.context.timezone ?data.context.timezone : (contextMeta && contextMeta.timezone) || "Asia/Kolkata";
-                data.context =prepareTemplateData(resBody, data.context,timeZone);
+                var contextMeta = context.session.BotUserSession.lastMessage.messagePayload.meta;
+                var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ)
+                    || (contextMeta && contextMeta.timezone) ||  "Asia/Kolkata";
+                data.context =prepareTemplateData(resBody, data.context,timeZone) ;
             }
-
             sdk.respondToHook(data);
         });
 }
@@ -171,14 +171,14 @@ function onFailureServiceCall(requestId) {
 }
 
 function serviceRequest(requestId, storeId, url,userDeatils, type, headers) {
-    serverCall(requestId, storeId, url, userDeatils,type, headers, {
+    serviceRequestData(requestId, storeId, url, userDeatils,type, headers, {
         on_success : onSuccessServiceCall,
         on_failure : onFailureServiceCall
     });
 }
 
 function serviceRequestCall(requestId, storeId, url,userDeatils, type, headers) {
-    serverCall(requestId, storeId, url, userDeatils,type, headers, {
+    serviceRequestData(requestId, storeId, url, userDeatils,type, headers, {
         on_success : onSuccessCall,
         on_failure : onFailureServiceCall
     });
@@ -189,23 +189,21 @@ module.exports = {
     botName : botName,
 
     on_user_message : function(requestId, data, callback) {
-	  console.log("on_user_message",JSON.stringify(data))
- 
-       sdk.sendBotMessage(data, callback);
+        sdk.sendBotMessage(data, callback);
     },
-    on_bot_message  : function(requestId, data, callback) {
-	  console.log("on_bot_message",JSON.stringify(data))
 
+    on_bot_message  : function(requestId, data, callback) {
         sdk.sendUserMessage(data, callback);
     },
+
     on_webhook      : function(requestId, data, componentName, callback) {
         console.log("componentName===",componentName);
         console.log("request data",JSON.stringify(data))
         var url = config.koraUrl + config.apiVersion;
-        var callOut = true, type = "GET", reqBody = {},payload = {};
+        var callOut = true, type = "GET", reqBody = {}, payload = {};
         var context = data.context;
         var customData  = (context.session.BotUserSession.lastMessage.messagePayload.message &&
-        context.session.BotUserSession.lastMessage.messagePayload.message.customData)||{kmToken:"x7-ZzEs0yS9C87ODz2GTi-9KgqNGnV_hfdhVlfLGowvN0auUgIcRjx4DgMirJfYR"}
+            context.session.BotUserSession.lastMessage.messagePayload.message.customData)
         var token = "bearer " +customData.kmToken
         var headers = {
             "Authorization"   : token,
@@ -216,7 +214,7 @@ module.exports = {
         var order = context.order;
         var storeId = context.storeId;
         sdk.saveData(requestId, data)
-           .then(function() {
+            .then(function() {
                 if(componentName === 'GETMEMBERDATA'){
                     url += apiConfig.seviceUrl.componentName.url;
                     type = apiConfig.seviceUrl.componentName.type;
@@ -326,11 +324,11 @@ module.exports = {
                     if(index>-1){
                         console.log(inputArr ,index)
                         if(index===inputArr.length-1){
-                             hashTags.push(inputArr[index-1])
-                         }else if((sw.removeStopwords([inputArr[index-1]])).length>0){
-                             hashTags.push(inputArr[index-1])
+                            hashTags.push(inputArr[index-1])
+                        }else if((sw.removeStopwords([inputArr[index-1]])).length>0){
+                            hashTags.push(inputArr[index-1])
                         }else{
-                                hashTags.push(inputArr[index+1])
+                            hashTags.push(inputArr[index+1])
                         }
                     }
 
@@ -375,12 +373,11 @@ module.exports = {
                         if(de && de.toDate){
                             payload.timeRange['fromDate'] = new Date(de.fromDate).getTime();
                             payload['timeRange']['toDate']    = new Date(de.toDate).getTime();
-                        }else{
+                        }else {
                             payload['timeRange']['toDate'] = new Date().getTime();
                             payload['timeRange']['fromDate']    = new Date(de.fromDate).getTime();
-                         }
+                        }
                     }
-
                     if(entities && entities.TimeEntity)
                         payload.time = entities.TimeEntity;
                     type = apiConfig.seviceUrl[componentName].type;
@@ -411,6 +408,7 @@ module.exports = {
                         streamId : context.botid
                     }
                     type = apiConfig.seviceUrl[componentName].type;
+
                 }else if(componentName === 'GetEmailInfo'){
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
@@ -426,7 +424,7 @@ module.exports = {
                         mappedkuid : mappedkuid,
                         streamId : context.botid,
                         "person" :[
-                             {
+                            {
                                 "from" : Array.isArray(name)?name:[name],
                                 "to"  : []
                             }
@@ -436,6 +434,7 @@ module.exports = {
                         "time": after,
                         "in" : []
                     }
+
                     type = apiConfig.seviceUrl[componentName].type;
 
                 }else if(componentName === 'Reminderhook'){
@@ -487,23 +486,25 @@ module.exports = {
 
                     }
                     type = apiConfig.seviceUrl[componentName].type;
+
                 }else if(componentName ==='ShareArticle'){
                     url += apiConfig.seviceUrl[componentName].url;
                     kId= context.knowledgeId || (context.userInfo && context.userInfo.id);
                     url = util.format(url, mappedkuid,kId);
                     var params = (context.session.BotUserSession.lastMessage.messagePayload.message &&
-                                  context.session.BotUserSession.lastMessage.messagePayload.message.params);
+                                    context.session.BotUserSession.lastMessage.messagePayload.message.params);
                     if(params && typeof params ==='string')
                         params = JSON.parse(params);
                     var users = [];
                     params.forEach(function(u){
-                       users.push({id: u.id, "type": "person", "privilege": 0});
+                        users.push({id: u.id, "type": "person", "privilege": 0});
                     })
                     knowledgeIds = context.knowledgeId || (context.userInfo && context.userInfo.id);
                     payload = {
                         users      : users,
                     }
                     type = apiConfig.seviceUrl[componentName].type;
+
                 }else if(componentName === 'MeetingSlot'){
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
@@ -512,10 +513,12 @@ module.exports = {
                     var title  = (context.entities.KeywordExtraction && context.entities.KeywordExtraction) || "";
 
                     var dateMin, dateMax, dateTime;
-                    var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ) ||
-                                   (context.session.BotUserSession.lastMessage.messagePayload.meta && context.session.BotUserSession.lastMessage.messagePayload.meta.timezone) ||  "Asia/Kolkata"; 
+                    var contextMeta = context.session.BotUserSession.lastMessage.messagePayload.meta;
+                    var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ)
+                        || (contextMeta && contextMeta.timezone) ||  "Asia/Kolkata";
                     var dateEntity = context.entities.NewCompositeEntity;
                     var orgEmailId = context.session && context.session.UserContext && context.session.UserContext.emailId;
+
 
                     if(dateEntity){
                         var datePeriod = dateEntity.dateperiodentityformeeting;
@@ -528,11 +531,13 @@ module.exports = {
                             dateMin = dateEntity.datetimeformeeting;
                         }
                         dateTime = dateEntity.datetimeformeeting;
-                    }
 
+                    }
                     if(dateMin && !dateMax) {
                         dateMax = dateMin;
                     }
+
+                    console.log('dateMin : ', dateMin, 'dateMax : ', dateMax, ' - ', new Date(dateMin), '', new Date(dateMax));
 
                     var userIds = [];
                     userIds.push(mappedkuid);
@@ -561,23 +566,21 @@ module.exports = {
                     url = util.format(url, mappedkuid);
                     var slotdata = context.slotdata[0];
                     var title =  context.entities.KeywordExtraction || context.entities.NeedTitle || context.title;
-                    var emailIds = [];
-                    var emailIds = [];
+                    var allemails = [];
                     var personsInfo = context.session.BotUserSession.personResolveResponse;
                     if(personsInfo){
                         personsInfo.forEach(function(e){
-                            emailIds.push(e.emailId);
+                            allemails.push(e.emailId);
                         });
                     }else{
-                        emailIds.push(_.uniq(context.emailIds));
+                        allemails.push(_.uniq(context.emailIds));
                     }
-
                     payload = {
-                        "endTime"	 : Number(slotdata.end),
-                        "startTime"	 : Number(slotdata.start),
-                        "attendees"	 : emailIds,
-                        "title"		 : title,
-                        "mId"        : context.mId
+                        "endTime"	:	Number(slotdata.end),
+                        "startTime"	:	Number(slotdata.start),
+                        "attendees"	: 	allemails,
+                        "title"		:       title,
+                        "mId"          :	context.mId
                     }
                     type = apiConfig.seviceUrl[componentName].type;
 
@@ -589,24 +592,26 @@ module.exports = {
                     var dateMin = "",dateTime,dateMax="";
                     var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ) ||
                                    (context.session.BotUserSession.lastMessage.messagePayload.meta && context.session.BotUserSession.lastMessage.messagePayload.meta.timezone) ||  "Asia/Kolkata"; 
+
                     if(dateCompositeEnt){
                         var datePeriod = dateCompositeEnt.dateperiodentityformeeting;
                         if(datePeriod) {
-                                dateMin = datePeriod.fromDate;
-                                dateMax = datePeriod.toDate;
+                            dateMin = datePeriod.fromDate;
+                            dateMax = datePeriod.toDate;
                         } else if(dateCompositeEnt.dateonlyentity) {
-                                dateMin = dateCompositeEnt.dateonlyentity;
+                            dateMin = dateCompositeEnt.dateonlyentity;
                         }else{
-                                dateMin = dateCompositeEnt.datetimeformeeting;
+                            dateMin = dateCompositeEnt.datetimeformeeting;
                         }
                         dateTime = dateCompositeEnt.datetimeformeeting;
-                    }
-                    if(dateMin) {
-                            dateMin = new Date(dateMin);
-                    } else {
-                            dateMin = new Date();
+
                     }
 
+                    if(dateMin) {
+                        dateMin = new Date(dateMin);
+                    } else {
+                        dateMin = new Date();
+                    }
                     var singleEvent = ((context.entities && context.entities.NextImmediateList) || dateTime ) ? true:false;
 
                     if(dateMin && !dateMax) {
@@ -615,10 +620,11 @@ module.exports = {
                     var personsInfo = context.session.BotUserSession.personResolveResponse || [];
                     var emails   =  [];
                     personsInfo.forEach(function(e){
-                            emails.push(e.emailId);
+                        emails.push(e.emailId);
                     });
 
                     emails = emails.join('&');
+
                     payload = {
                         "emails"          : emails,
                         "starttime"       : utility.getDateTimeByZone(new Date(dateMin),timeZone,'YYYY-MM-DD'),
@@ -629,6 +635,7 @@ module.exports = {
                         "timeZone"        : timeZone  
                     }
                     type = apiConfig.seviceUrl[componentName].type;
+                    console.log('Meeting Lookup :::::::::::::::::::::::::::::', JSON.stringify(payload));
 
                 }else if(componentName === 'GetDriveData'){
                     var action = context.entities.ActionEntity;
@@ -640,28 +647,27 @@ module.exports = {
                     var docType = context.entities.DocumentType;
                     var dateEntity = context.entities.DateCompositEntity;
                     var fromDate,toDate;
-
-                    if(dateEntity) {
-                        if (dateEntity.Date_Period) {
+                    if(dateEntity){
+                        if(dateEntity.Date_Period){
                             fromDate = dateEntity.Date_Period.fromDate;
-                            toDate = dateEntity.Date_Period.toDate;
-                        } else if (dateEntity.Date_Time) {
+                            toDate   = dateEntity.Date_Period.toDate;
+                        }else if(dateEntity.Date_Time){
                             fromDate = dateEntity.Date_Time;
                             toDate = dateEntity.Date_Time;
-                        }
-                        else if (dateEntity.DateEntity) {
+                        }else if(dateEntity.DateEntity){
                             fromDate = dateEntity.DateEntity;
                             toDate = dateEntity.DateEntity;
                         }
                         fromDate = new Date(fromDate).toISOString();
                         var date = new Date(toDate);
-                        toDate = new Date(date.setDate(date.getDate() + 1)).toISOString();
+                        toDate = new Date(date.setDate(date.getDate()+1)).toISOString();
                     }
                     if(sentence.indexOf("shared to me")>-1 || sentence.indexOf("shared with me")>-1 ){
                         action = "SharedBy";
                     }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1
                         ||sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1
-                        || sentence.indexOf("shared by me")>-1) {
+                        || sentence.indexOf("shared by me")>-1){
+
                         action = "SharedTo";
                     }
                     payload = {
@@ -674,7 +680,6 @@ module.exports = {
                         toDate : toDate,
                         action  :action
                     }
-                    console.log("action=====type===========",action);
                     type = apiConfig.seviceUrl[componentName].type;
 
                 }else if(componentName === 'ContactData'){
@@ -693,12 +698,24 @@ module.exports = {
                     var title =  context.entities.KeywordExtraction || context.entities.NeedTitle;
                     var userIds = [];
                     var users = context.session.BotUserSession.personResolveResponse;
+                    var extUsers = context.session.BotUserSession.extUsers;
+                    if(extUsers){
+                        userIds = userIds.concat(extUsers);
+                        extUsers.forEach(function(extUser){
+                            var obj = {id : extUser,emailId:extUser ,name : extUser.split("@")[0] };
+                            users.push(obj);
+                        });
+                    }
+                    var contextMeta = context.session.BotUserSession.lastMessage.messagePayload.meta;
+                    var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ)
+                        || (contextMeta && contextMeta.timezone) ||  "Asia/Kolkata";
                     var invitees  = [];
                     var count = 1;
                     var allU = {};
                     users.forEach(function(user){
                         userIds.push(user.id);
-                        allU[user.id] = {
+                        var key = user.id.replace(/\./g,"-");
+                        allU[key] = {
                             id : user.id,
                             emailId : user.emailId,
                             name : user.name,
@@ -713,6 +730,7 @@ module.exports = {
                         }
                         count ++ ;
                     });
+
                     var preview = {
                         invitees : invitees,
                         showMore : count > 4 ? true : false,
@@ -725,9 +743,11 @@ module.exports = {
                         "slots"          : context.optionalSlots,
                         "location"       : context.entities.locationExtraction,
                         "preview"        : preview,
-                        "usersMap"       : allU
+                        "usersMap"       : allU,
+                        "timezone"       : timeZone
                     }
                     type = apiConfig.seviceUrl[componentName].type;
+
                 }else if(componentName === 'GetMeetingData'){
                     url += apiConfig.seviceUrl[componentName].url;
                     var mId  = context.mId ||"5b8784cc81ee670c15aa090a";
@@ -738,6 +758,7 @@ module.exports = {
                         serviceRequestCall(requestId, storeId, url, payload, type,headers);
                         callback(null, new sdk.AsyncResponse());
                     }
+
                 }else if(componentName === 'UpdateMeetingRequest'){
                     url += apiConfig.seviceUrl[componentName].url;
                     var mId  = context.mId;
@@ -746,7 +767,7 @@ module.exports = {
                     if(params ){
                         params  = (typeof params ==='string' ? JSON.parse(params) : params);
                         payload.preferredSlots = params.slots || []
-                        }
+                    }
                     type = apiConfig.seviceUrl[componentName].type;
 
                 }else if(componentName === 'CancelMeetingRequest'){
@@ -754,6 +775,7 @@ module.exports = {
                     var mId  = context.mId;
                     url = util.format(url, mappedkuid,mId);
                     type = apiConfig.seviceUrl[componentName].type;
+
                 }
                 if(callOut){
                     serviceRequest(requestId, storeId, url, payload, type,headers);
@@ -764,27 +786,30 @@ module.exports = {
 };
 
 function getNext15Mins(_dt){
-	if(_dt){
-		var dt = new Date(_dt);
-		return dt.getTime()+900000;
-	}else{
-		return '';
-	}		
+    if(_dt){
+        var dt = new Date(_dt);
+        return dt.getTime()+900000;
+    }else{
+        return '';
+    }
 }
 
 function daysdifference(date1, date2) {
+
     var ONEDAY = 1000 * 60 * 60 * 24;
+
     var date1_ms = date1.getTime();
     var date2_ms = date2.getTime();
-           
+
     var difference_ms = Math.abs(date1_ms - date2_ms);
+
     return Math.round(difference_ms/ONEDAY);
 }
 
-function setHMSTime(d,h,m,s) {
+function setHMSTime(d,h,m,s)
+{
     d.setHours(h);
     d.setMinutes(m);
     d.setSeconds(s);
     return d;
 }
-
