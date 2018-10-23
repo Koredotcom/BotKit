@@ -87,6 +87,16 @@
         "CancelMeetingRequest": {
             "url": "ka/users/%s/meetingrequest/%s",
             "type": "DELETE"
+        },
+        "GetMeetingType" : {
+            "url" :"ka/users/%s/profile/meetingType",
+            "type" :"GET"
+
+        },
+        "Send_Email_Webhook": {
+            "url": "ka/users/%s/sendemail",
+            "type": "POST"
         }
+
     }
 }

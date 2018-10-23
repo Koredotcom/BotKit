@@ -153,8 +153,8 @@ function onSuccessCall(requestId,callbackData, resBody) {
             if(resBody && resBody.errors){
                 data.context.successful = false;
             }else{
-                var contextMeta = context.session.BotUserSession.lastMessage.messagePayload.meta;
-                var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ)
+                var contextMeta = data.context.session.BotUserSession.lastMessage.messagePayload.meta;
+                var timeZone = (data.context.session.UserContext.customData && data.context.session.UserContext.customData.KATZ)
                     || (contextMeta && contextMeta.timezone) ||  "Asia/Kolkata";
                 data.context =prepareTemplateData(resBody, data.context,timeZone) ;
             }
@@ -360,22 +360,42 @@ module.exports = {
                         payload.source =entities.SourceEntity;
                     }
 
-                    if(sentence.indexOf("shared to me")>-1|| sentence.indexOf("shared with me")){
+                    if(sentence.indexOf("shared to me")>-1|| sentence.indexOf("shared with me")>-1){
                         console.log("shared to me");
                         payload.action = "sharedBy";
                     }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1 || sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1 || sentence.indexOf("shared by me")>-1){
                         console.log("shared to",sentence);
                         payload.action = "sharedTo";
                     }
-                    if(entities && entities.NewCompositeEntity){
-                        payload.timeRange= {};
-                        var de = entities.NewCompositeEntity.dateperiodentityformeeting;
-                        if(de && de.toDate){
+                    if(entities && entities.NewCompositeEntity) {
+                        payload.timeRange = {};
+                        var datecomposite = entities.NewCompositeEntity;
+                        var de = datecomposite.dateperiodentityformeeting;
+                        if (de && de.toDate) {
                             payload.timeRange['fromDate'] = new Date(de.fromDate).getTime();
-                            payload['timeRange']['toDate']    = new Date(de.toDate).getTime();
+                            payload['timeRange']['toDate'] = new Date(de.toDate).getTime();
+                        }else if (datecomposite.datetimeformeeting) {
+                            payload.timeRange['fromDate'] = new Date(datecomposite.datetimeformeeting).getTime();
+                            payload['timeRange']['toDate'] = new Date().getTime();
+
+                        }else if (datecomposite.dateonlyentity) {
+                            var toDate = new Date().getTime();
+                            var fromDate = new Date(datecomposite.dateonlyentity).getTime();
+                            var temp = toDate;
+                            if (fromDate > toDate) {
+                                toDate = fromDate;
+                                fromDate = temp;
+                            }
+                            payload.timeRange['fromDate'] = fromDate;
+                            payload['timeRange']['toDate'] = toDate;
+
+                        }else if (datecomposite.duration) {
+                            payload.timeRange['fromDate'] = new Date(datecomposite.duration).getTime();
+                            payload['timeRange']['toDate'] = new Date().getTime();
+
                         }else {
                             payload['timeRange']['toDate'] = new Date().getTime();
-                            payload['timeRange']['fromDate']    = new Date(de.fromDate).getTime();
+                            payload['timeRange']['fromDate'] = new Date(de.fromDate).getTime();
                         }
                     }
                     if(entities && entities.TimeEntity)
@@ -410,23 +430,48 @@ module.exports = {
                     type = apiConfig.seviceUrl[componentName].type;
 
                 }else if(componentName === 'GetEmailInfo'){
+                    var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
                     var name  =context.entities.EmailEntity || context.entities.PersonEntity;
                     var keyword =(context.entities.KeywordExtraction && context.entities.KeywordExtraction)||"";
-                    var fromDate = context.entities.DateEntity ;
+                    var fromDate = context.entities.DateEntity;
+                    var dateCompositeEnt = context.entities.DateCompEntity;
+                    var action = sentence.indexOf("sent to")>-1 ? "sentTo" : "sentBy";
+                    var dateMin = '', dateMax= '';
+                    var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ) ||
+                        (context.session.BotUserSession.lastMessage.messagePayload.meta && context.session.BotUserSession.lastMessage.messagePayload.meta.timezone) ||  "Asia/Kolkata";
+
+                    if(dateCompositeEnt){
+                        var datePeriod = dateCompositeEnt.Date_Period;
+                        if(datePeriod) {
+                            dateMin = datePeriod.fromDate;
+                            dateMax = incrementDate(datePeriod.toDate);
+                        } else if(dateCompositeEnt.DateEntity) {
+                            dateMin = dateCompositeEnt.DateEntity;
+                            dateMax = incrementDate(dateMin);
+                        }
+                        dateMax = utility.getDateTimeByZone(dateMax,timeZone,'YYYY-MM-DD');
+                    }
+
                     var after = [];
 
-                    if(fromDate){
-                        after = ["after:"+fromDate] ;
+                    if(dateMin){
+                        after = ["after:"+dateMin+" before:"+dateMax] ;
+                    }
+                    var from,to;
+                    if(action === "sentBy"){
+                        from = (name && Array.isArray(name)?name:[name]);
+                    }else{
+                        to = (name && Array.isArray(name)?name:[name]);
                     }
                     payload = {
                         mappedkuid : mappedkuid,
                         streamId : context.botid,
                         "person" :[
                             {
-                                "from" : Array.isArray(name)?name:[name],
-                                "to"  : []
+                                "from" : (from || []),
+                                "to"  : (to || [])
                             }
                         ],
                         "labels" : [],
@@ -554,7 +599,7 @@ module.exports = {
                         "userIds"       : userIds,
                         "title" 	    : title,
                         "when"  	    : { starttime: dateMin, endtime: dateMax },
-                        "duration"	    : 30
+                        "duration"	    : (context.entities.duration && context.entities.duration.amount) || 30
                     }
                 }else if(componentName === 'PersonResolveHook'){
                     url += apiConfig.seviceUrl[componentName].url;
@@ -575,12 +620,21 @@ module.exports = {
                     }else{
                         allemails.push(_.uniq(context.emailIds));
                     }
+                    if(context.extUserEmailIds){
+                        allemails = allemails.concat(context.extUserEmailIds);
+                    }
+                    var meetingType = context.entities.SelectMeetingType =="Other" ? context.entities.MeetingUrl : (context.entities.SelectMeetingType|| context.meetingType)
+                    if(!meetingType){
+                        meetingType = (context.userInfo && context.userInfo.preview && context.userInfo.preview.meetingType) || "WebEx";
+                    }
                     payload = {
-                        "endTime"	:	Number(slotdata.end),
-                        "startTime"	:	Number(slotdata.start),
-                        "attendees"	: 	allemails,
-                        "title"		:       title,
-                        "mId"          :	context.mId
+                        "endTime"     : Number(slotdata.end),
+                        "startTime"   : Number(slotdata.start),
+                        "attendees"   : allemails,
+                        "title"       : title,
+                        "mId"         : context.mId,
+                        "meetingType" : meetingType
+
                     }
                     type = apiConfig.seviceUrl[componentName].type;
 
@@ -730,11 +784,12 @@ module.exports = {
                         }
                         count ++ ;
                     });
-
+                    var meetingType = context.entities.SelectMeetingType =="Other" ? context.entities.MeetingUrl : context.entities.SelectMeetingType;
                     var preview = {
                         invitees : invitees,
                         showMore : count > 4 ? true : false,
-                        count    : count > 4 ? count-3 : 0
+                        count    : count > 4 ? count-3 : 0,
+                        meetingType : meetingType
                     }
                     payload = {
                         "attendees"      : userIds,
@@ -744,7 +799,8 @@ module.exports = {
                         "location"       : context.entities.locationExtraction,
                         "preview"        : preview,
                         "usersMap"       : allU,
-                        "timezone"       : timeZone
+                        "timezone"       : timeZone,
+                        "offset"         : getMinutes(utility.getDateTimeByZone(new Date,timeZone,'Z'))
                     }
                     type = apiConfig.seviceUrl[componentName].type;
 
@@ -776,6 +832,21 @@ module.exports = {
                     url = util.format(url, mappedkuid,mId);
                     type = apiConfig.seviceUrl[componentName].type;
 
+                }else if(componentName === 'GetMeetingType'){
+                    url += apiConfig.seviceUrl[componentName].url;
+                    var mId  = context.mId;
+                    url = util.format(url, mappedkuid);
+                    type = apiConfig.seviceUrl[componentName].type;
+                }else if(componentName === 'Send_Email_Webhook'){
+                    url += apiConfig.seviceUrl[componentName].url;
+                    var mId = context.mId;
+                    url = util.format(url, mappedkuid);
+                    type = apiConfig.seviceUrl[componentName].type;
+                    payload = {
+                        "subject" : context.entities.Mail_Subject,
+                        "content" : context.entities.Email_Content,
+                        "emailIds" :context.session.BotUserSession.emailIds
+                    };
                 }
                 if(callOut){
                     serviceRequest(requestId, storeId, url, payload, type,headers);
