@@ -433,11 +433,22 @@ module.exports = {
                     var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
-                    var name  =context.entities.EmailEntity || context.entities.PersonEntity;
+                    var name  =context.entities.EmailEntity || context.entities.EmailPersonEntity;
                     var keyword =(context.entities.KeywordExtraction && context.entities.KeywordExtraction)||"";
+                    if(context.entities.EmailCompositeEntity){
+                        context.entities.EmailCompositeEntity.forEach(function(key){
+                            name = key['EmailPersonEntity'] || key['EmailEntity'];
+                            keyword = key['KeywordExtraction'];
+                        })
+                    }
                     var fromDate = context.entities.DateEntity;
                     var dateCompositeEnt = context.entities.DateCompEntity;
-                    var action = sentence.indexOf("sent to")>-1 ? "sentTo" : "sentBy";
+                    var action = "sentBy";
+                    if(sentence.indexOf("sent to me")>-1){
+                        action =  "sentBy"
+                    }else if(sentence.indexOf("sent to")>-1 || sentence.indexOf("sent by me")>-1 ||sentence.indexOf("i sent")>-1){
+                        action =  "sentTo"
+                    }
                     var dateMin = '', dateMax= '';
                     var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ) ||
                         (context.session.BotUserSession.lastMessage.messagePayload.meta && context.session.BotUserSession.lastMessage.messagePayload.meta.timezone) ||  "Asia/Kolkata";
@@ -463,6 +474,7 @@ module.exports = {
                     if(action === "sentBy"){
                         from = (name && Array.isArray(name)?name:[name]);
                     }else{
+                        from = [context.session.UserContext.emailId];
                         to = (name && Array.isArray(name)?name:[name]);
                     }
                     payload = {
@@ -555,16 +567,15 @@ module.exports = {
                     url = util.format(url, mappedkuid);
 
                     var personsInfo = context.session.BotUserSession.personResolveResponse;
-                    var title  = (context.entities.KeywordExtraction && context.entities.KeywordExtraction) || "";
-
+                    var excludeCurrentUser = context.session.BotUserSession.excludeCurrentUser;
+                    var title = (context.entities.KeywordExtraction && context.entities.KeywordExtraction) || "";
                     var dateMin, dateMax, dateTime;
                     var contextMeta = context.session.BotUserSession.lastMessage.messagePayload.meta;
                     var timeZone = (context.session.UserContext.customData && context.session.UserContext.customData.KATZ)
-                        || (contextMeta && contextMeta.timezone) ||  "Asia/Kolkata";
+                        || (contextMeta && contextMeta.timezone) || "Asia/Kolkata";
                     var dateEntity = context.entities.NewCompositeEntity;
                     var orgEmailId = context.session && context.session.UserContext && context.session.UserContext.emailId;
-
-
+                    var dateEntityForFree = context.entities.Date_Time_Enity;
                     if(dateEntity){
                         var datePeriod = dateEntity.dateperiodentityformeeting;
                         if(datePeriod) {
@@ -577,7 +588,10 @@ module.exports = {
                         }
                         dateTime = dateEntity.datetimeformeeting;
 
+                    }else if(dateEntityForFree){
+                        dateMin = dateEntityForFree;
                     }
+
                     if(dateMin && !dateMax) {
                         dateMax = dateMin;
                     }
@@ -586,9 +600,7 @@ module.exports = {
 
                     var userIds = [];
                     userIds.push(mappedkuid);
-
                     personsInfo.forEach(function(e){
-                        //if(orgEmailId != e.emailId)
                         userIds.push(e.id);//EARLIER e.id
                     });
 
@@ -597,14 +609,26 @@ module.exports = {
                     type = apiConfig.seviceUrl[componentName].type;
                     payload = {
                         "userIds"       : userIds,
-                        "title" 	    : title,
-                        "when"  	    : { starttime: dateMin, endtime: dateMax },
-                        "duration"	    : (context.entities.duration && context.entities.duration.amount) || 30
+                        "title"         : title,
+                        "when"          : { starttime: dateMin, endtime: dateMax },
+                        "duration"      : (context.entities.duration && context.entities.duration.amount) || 30
                     }
+                }else if(componentName === 'ResolveKoraUser'){
+                    url += apiConfig.seviceUrl[componentName].url;
+                    url = util.format(url, mappedkuid);
+                    var allemails = [];
+                    var personsInfo = context.session.BotUserSession.personResolveResponse;
+                    if(personsInfo){
+                        personsInfo.forEach(function(e){
+                            allemails.push(e.emailId);
+                        });
+                    }
+                    payload =  {"emails": allemails};
+                    type = apiConfig.seviceUrl[componentName].type;
                 }else if(componentName === 'PersonResolveHook'){
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
-                    payload =  {"name": context.session.BotUserSession.persons};
+                    payload =  {"names": context.session.BotUserSession.persons};
                     type = apiConfig.seviceUrl[componentName].type;
                 }else if(componentName === 'CreateEvent'){
                     url += apiConfig.seviceUrl[componentName].url;
@@ -623,9 +647,9 @@ module.exports = {
                     if(context.extUserEmailIds){
                         allemails = allemails.concat(context.extUserEmailIds);
                     }
-                    var meetingType = context.entities.SelectMeetingType =="Other" ? context.entities.MeetingUrl : (context.entities.SelectMeetingType|| context.meetingType)
+                    var description = context.meetingDesc;
                     if(!meetingType){
-                        meetingType = (context.userInfo && context.userInfo.preview && context.userInfo.preview.meetingType) || "WebEx";
+                        meetingType =(context.userInfo && context.userInfo.preview && context.userInfo.preview.mdesc)||"WebEx";
                     }
                     payload = {
                         "endTime"     : Number(slotdata.end),
@@ -633,7 +657,7 @@ module.exports = {
                         "attendees"   : allemails,
                         "title"       : title,
                         "mId"         : context.mId,
-                        "meetingType" : meetingType
+                        "description" : description
 
                     }
                     type = apiConfig.seviceUrl[componentName].type;
@@ -700,6 +724,14 @@ module.exports = {
                     var keyword = context.entities.KeyWordEntity;
                     var docType = context.entities.DocumentType;
                     var dateEntity = context.entities.DateCompositEntity;
+                    if(context.entities.DCompositeEntity){
+                        context.entities.DCompositeEntity.forEach(function(key){
+                            name = key['PersonEntity'];
+                            keyword = key['KeyWordEntity'];
+                            docType = key['DocumentType'];
+
+                        })
+                    }
                     var fromDate,toDate;
                     if(dateEntity){
                         if(dateEntity.Date_Period){
@@ -721,9 +753,9 @@ module.exports = {
                     }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1
                         ||sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1
                         || sentence.indexOf("shared by me")>-1){
-
                         action = "SharedTo";
                     }
+
                     payload = {
                         person  : name,
                         keyword : keyword,
@@ -784,12 +816,14 @@ module.exports = {
                         }
                         count ++ ;
                     });
-                    var meetingType = context.entities.SelectMeetingType =="Other" ? context.entities.MeetingUrl : context.entities.SelectMeetingType;
+                    var meetingType = context.entities.MeetingType;
+                    var mdesc = context.meetingDesc;
                     var preview = {
                         invitees : invitees,
                         showMore : count > 4 ? true : false,
                         count    : count > 4 ? count-3 : 0,
-                        meetingType : meetingType
+                        meetingType : meetingType,
+                        mdesc       : mdesc
                     }
                     payload = {
                         "attendees"      : userIds,
@@ -800,7 +834,7 @@ module.exports = {
                         "preview"        : preview,
                         "usersMap"       : allU,
                         "timezone"       : timeZone,
-                        "offset"         : getMinutes(utility.getDateTimeByZone(new Date,timeZone,'Z'))
+                        "offset"         : utility.getMinutes(utility.getDateTimeByZone(new Date,timeZone,'Z'))
                     }
                     type = apiConfig.seviceUrl[componentName].type;
 

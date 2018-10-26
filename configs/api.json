@@ -33,7 +33,7 @@
             "type": "POST"
         },
         "GetEmailInfo": {
-            "url": "ka/users/%s/emails/search",
+            "url": "ka/users/%s/search/emails",
             "type": "POST"
         },
         "Reminderhook": {
@@ -57,7 +57,7 @@
             "type": "POST"
         },
         "PersonResolveHook": {
-            "url": "search/KAUsers?",
+            "url": "ka/users/%s/search/contacts",
             "type": "POST"
         },
         "MeetingLookupHook": {
@@ -65,7 +65,7 @@
             "type": "GET"
         },
         "GetDriveData": {
-            "url": "ka/users/%s/drive/search",
+            "url": "ka/users/%s/search/drive",
             "type": "POST"
         },
         "ContactData": {
@@ -96,7 +96,11 @@
         "Send_Email_Webhook": {
             "url": "ka/users/%s/sendemail",
             "type": "POST"
-        }
+        },
+        "ResolveKoraUser" :{
+            "url": "ka/users/%s/profile/resolve",
+            "type": "POST"
+    	}
 
     }
 }
