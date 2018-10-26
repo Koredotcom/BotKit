@@ -601,6 +601,7 @@ module.exports = {
                     console.log('dateMin : ', dateMin, 'dateMax : ', dateMax, ' - ', new Date(dateMin), '', new Date(dateMax));
 
                     var userIds = [];
+		    if(!excludeCurrentUser)	
                     userIds.push(mappedkuid);
 
                     personsInfo.forEach(function(e){
