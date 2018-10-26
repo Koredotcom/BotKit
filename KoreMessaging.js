@@ -202,6 +202,7 @@ module.exports = {
         var url = config.koraUrl + config.apiVersion;
         var callOut = true, type = "GET", reqBody = {}, payload = {};
         var context = data.context;
+
         var customData  = (context.session.BotUserSession.lastMessage.messagePayload.message &&
             context.session.BotUserSession.lastMessage.messagePayload.message.customData)
         var token = "bearer " +customData.kmToken
@@ -477,6 +478,7 @@ module.exports = {
                         from = [context.session.UserContext.emailId];
                         to = (name && Array.isArray(name)?name:[name]);
                     }
+
                     payload = {
                         mappedkuid : mappedkuid,
                         streamId : context.botid,
@@ -600,6 +602,7 @@ module.exports = {
 
                     var userIds = [];
                     userIds.push(mappedkuid);
+
                     personsInfo.forEach(function(e){
                         userIds.push(e.id);//EARLIER e.id
                     });
@@ -610,8 +613,9 @@ module.exports = {
                     payload = {
                         "userIds"       : userIds,
                         "title"         : title,
-                        "when"          : { starttime: dateMin, endtime: dateMax },
-                        "duration"      : (context.entities.duration && context.entities.duration.amount) || 30
+                        "when"          : { starttime: dateMin, endtime: dateMax, exactTime:dateTime },
+                        "duration"      : (context.entities.duration && context.entities.duration.amount) || 30,
+			"timeZone"      : timeZone
                     }
                 }else if(componentName === 'ResolveKoraUser'){
                     url += apiConfig.seviceUrl[componentName].url;
@@ -624,7 +628,7 @@ module.exports = {
                         });
                     }
                     payload =  {"emails": allemails};
-                    type = apiConfig.seviceUrl[componentName].type;
+		    type = apiConfig.seviceUrl[componentName].type;	
                 }else if(componentName === 'PersonResolveHook'){
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
@@ -695,14 +699,13 @@ module.exports = {
                     if(dateMin && !dateMax) {
                         dateMax = dateMin;
                     }
-                    var personsInfo = context.session.BotUserSession.personResolveResponse || [];
-                    var emails   =  [];
-                    personsInfo.forEach(function(e){
-                        emails.push(e.emailId);
-                    });
 
-                    emails = emails.join('&');
+                    var personsInfo =  context.entities.person || []; //context.session.BotUserSession.personResolveResponse || [];
+                    var emailsInfo = context.entities.Email || [];
 
+                    var emails   =  personsInfo.concat(emailsInfo);
+
+                    emails = emails.join('%26');
                     payload = {
                         "emails"          : emails,
                         "starttime"       : utility.getDateTimeByZone(new Date(dateMin),timeZone,'YYYY-MM-DD'),
@@ -918,3 +921,12 @@ function setHMSTime(d,h,m,s)
     d.setSeconds(s);
     return d;
 }
+
+function getDateForEmail(_dt, time){
+    var after = _dt;//"2015/11/19"; 
+    var myDateAfter = new Date(after + time);
+    var myEpochAfter = myDateAfter.getTime();//myDateAfter.getTime()/1000.0;
+
+    return myEpochAfter;
+}
+

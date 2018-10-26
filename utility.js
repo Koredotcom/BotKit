@@ -14,7 +14,13 @@ function getMinutes(offset){
     else
         return 0;
 }
+
+function getOffsetByZone(timeZone){
+	return moment().tz(timeZone).format('Z');
+}
+
 module.exports = {
     getDateTimeByZone : getDateTimeByZone,
+    getOffsetByZone   : getOffsetByZone,
     getMinutes        : getMinutes
 }
