@@ -792,7 +792,8 @@ module.exports = {
                     if(extUsers){
                         userIds = userIds.concat(extUsers);
                         extUsers.forEach(function(extUser){
-                            var obj = {id : extUser,emailId:extUser ,name : extUser.split("@")[0] };
+                            var name = extUser.split("@")[0];
+                            var obj = {id : extUser,emailId:extUser ,name :name.split(".") ,fN : name.split(".")[0],lN :""};
                             users.push(obj);
                         });
                     }
@@ -808,12 +809,16 @@ module.exports = {
                         allU[key] = {
                             id : user.id,
                             emailId : user.emailId,
-                            name : user.name,
+                            name : (user.fN + user.lN) || user.name,
+                            fN : user.fN,
+                            lN : user.lN,
                             color : user.color
                         }
                         if(count<5){
                             invitees.push({
-                                name  : user.name,
+                                name  : (user.fN + user.lN) || user.name,
+                                fN    : user.fN,
+                                lN    : user.lN,
                                 id    : user.id,
                                 color : user.color
                             })
