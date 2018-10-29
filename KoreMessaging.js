@@ -601,7 +601,7 @@ module.exports = {
                     console.log('dateMin : ', dateMin, 'dateMax : ', dateMax, ' - ', new Date(dateMin), '', new Date(dateMax));
 
                     var userIds = [];
-		    if(!excludeCurrentUser)	
+                    if(!excludeCurrentUser)
                     userIds.push(mappedkuid);
 
                     personsInfo.forEach(function(e){
@@ -616,7 +616,8 @@ module.exports = {
                         "title"         : title,
                         "when"          : { starttime: dateMin, endtime: dateMax, exactTime:dateTime },
                         "duration"      : (context.entities.duration && context.entities.duration.amount) || 30,
-			            "timeZone"      : timeZone
+                        "timeZone"      : timeZone
+
                     }
                 }else if(componentName === 'ResolveKoraUser'){
                     url += apiConfig.seviceUrl[componentName].url;
@@ -629,7 +630,7 @@ module.exports = {
                         });
                     }
                     payload =  {"emails": allemails};
-		    type = apiConfig.seviceUrl[componentName].type;	
+                    type = apiConfig.seviceUrl[componentName].type;
                 }else if(componentName === 'PersonResolveHook'){
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
@@ -719,7 +720,7 @@ module.exports = {
                     console.log('Meeting Lookup :::::::::::::::::::::::::::::', JSON.stringify(payload));
 
                 }else if(componentName === 'GetDriveData'){
-                    var action = context.entities.ActionEntity;
+                    var action = context.action;
                     var sentence  = context.userInputs.originalInput.sentence.toLowerCase();
                     url += apiConfig.seviceUrl[componentName].url;
                     url = util.format(url, mappedkuid);
@@ -735,7 +736,7 @@ module.exports = {
 
                         })
                     }
-                    var fromDate,toDate;
+                    var fromDate,toDate,hasAccessUsers= [];
                     if(dateEntity){
                         if(dateEntity.Date_Period){
                             fromDate = dateEntity.Date_Period.fromDate;
@@ -751,16 +752,18 @@ module.exports = {
                         var date = new Date(toDate);
                         toDate = new Date(date.setDate(date.getDate()+1)).toISOString();
                     }
-                    if(sentence.indexOf("shared to me")>-1 || sentence.indexOf("shared with me")>-1 ){
-                        action = "SharedBy";
-                    }else if(sentence.indexOf("i shared")>-1|| sentence.indexOf("shared with")>-1
-                        ||sentence.indexOf("shared to")>-1||sentence.indexOf("my shared")>-1
-                        || sentence.indexOf("shared by me")>-1){
-                        action = "SharedTo";
+                    if(context.inSelfDrive || action =="SharedTo"){
+                        name = context.session.UserContext.emailId;
+                        var persons = context.session.BotUserSession.personResolveResponse;
+                        if(persons && persons.length>0){
+                            persons.forEach(function(person){
+				                hasAccessUsers.push(person.emailId);
+			                })
+                        }
                     }
-
                     payload = {
-                        person  : name,
+                        owner  : name,
+                        hasAccessUsers : hasAccessUsers,
                         keyword : keyword,
                         docType : docType,
                         mappedkuid : mappedkuid,
