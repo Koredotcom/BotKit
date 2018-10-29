@@ -100,7 +100,10 @@
         "ResolveKoraUser" :{
             "url": "ka/users/%s/profile/resolve",
             "type": "POST"
-    	}
-
+    	},
+        "CancelMeetingHook": {
+            "url": "ka/users/%s/calendar/cancelEvents",
+            "type": "POST"
+        }
     }
 }

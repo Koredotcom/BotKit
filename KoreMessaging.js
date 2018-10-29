@@ -205,7 +205,7 @@ module.exports = {
 
         var customData  = (context.session.BotUserSession.lastMessage.messagePayload.message &&
             context.session.BotUserSession.lastMessage.messagePayload.message.customData)
-        var token = "bearer " +customData.kmToken
+        var token = "bearer " + customData.kmToken
         var headers = {
             "Authorization"   : token,
             "Content-Type"    : "application/json"
@@ -616,7 +616,7 @@ module.exports = {
                         "title"         : title,
                         "when"          : { starttime: dateMin, endtime: dateMax, exactTime:dateTime },
                         "duration"      : (context.entities.duration && context.entities.duration.amount) || 30,
-			"timeZone"      : timeZone
+			            "timeZone"      : timeZone
                     }
                 }else if(componentName === 'ResolveKoraUser'){
                     url += apiConfig.seviceUrl[componentName].url;
@@ -687,7 +687,6 @@ module.exports = {
                             dateMin = dateCompositeEnt.datetimeformeeting;
                         }
                         dateTime = dateCompositeEnt.datetimeformeeting;
-
                     }
 
                     if(dateMin) {
@@ -890,6 +889,29 @@ module.exports = {
                         "content" : context.entities.Email_Content,
                         "emailIds" :context.session.BotUserSession.emailIds
                     };
+                }else if(componentName === 'CancelMeetingHook'){
+                    url += apiConfig.seviceUrl[componentName].url;
+                    url = util.format(url, mappedkuid);
+                    type = apiConfig.seviceUrl[componentName].type;
+
+                    var eventId =context.entities.events;
+                    var eventIds = [];
+                    if(Array.isArray(eventId) &&  eventId[0]==='all'){
+                         for (var id in context.userInfo) {
+                            eventIds.push(context.userInfo[id].id);
+                        }
+                    } 
+                    else if(Array.isArray(eventId)) {
+                        for (var eId in eventId) {
+                            eventIds.push(eventId[eId]);
+                        }
+                    } else {
+                        eventIds.push(eventId);
+                    }
+                    payload = {
+                        "eventIds" : eventIds
+                    };
+                
                 }
                 if(callOut){
                     serviceRequest(requestId, storeId, url, payload, type,headers);
@@ -934,5 +956,11 @@ function getDateForEmail(_dt, time){
     var myEpochAfter = myDateAfter.getTime();//myDateAfter.getTime()/1000.0;
 
     return myEpochAfter;
+}
+
+function incrementDate(dt){
+        var date = new Date(dt);
+        date.setDate(date.getDate() + 1);
+        return date;
 }
 
