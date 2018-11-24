@@ -31,7 +31,6 @@
     "express": "^4.14.0",
     "finalhandler": "^0.5.0",
     "forwarded": "^0.1.0",
-    "fresh": "^0.3.0",
     "has-color": "^0.1.7",
     "http-errors": "^1.5.0",
     "iconv-lite": "^0.4.13",
