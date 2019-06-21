@@ -13,6 +13,10 @@
             "appId": "test_app_id2"
         }
     },
+    "bluePrism":{
+        "username" : "username_of_BluePrism_Studio_Process_Developer_Account",
+        "password" : "xxxxxxxx"
+    },
     "redis": {
         "options": {
             "host": "localhost",
