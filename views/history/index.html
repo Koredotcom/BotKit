@@ -1,0 +1,84 @@
+<!DOCTYPE> <html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=1.0">
+		<script src="./libs/jquery.js"></script>
+		<link href="chatWindow.css" rel="stylesheet"></link>
+		<link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+	</head>
+	<body>
+	<div class="header">
+		<div class="header-title">Chat History</div>
+	</div>
+			<ul class="chat-container" id="content">
+			</ul>
+	<script type="text/javascript">
+		var getUrlParameter = function getUrlParameter(sParam) {
+			var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+					sURLVariables = sPageURL.split('&'),
+					sParameterName,
+					i;
+			for (i = 0; i < sURLVariables.length; i++) {
+				sParameterName = sURLVariables[i].split('=');
+				if (sParameterName[0] === sParam) {
+					return sParameterName[1] === undefined ? true : sParameterName[1];
+				}
+			}
+		};
+		var formatAMPM = function (date) {
+			var hours = date.getHours();
+			var minutes = date.getMinutes();
+			var ampm = hours >= 12 ? 'pm' : 'am';
+			hours = hours % 12;
+			hours = hours ? hours : 12; // the hour '0' should be '12'
+			minutes = minutes < 10 ? '0'+minutes : minutes;
+			var strTime = hours + ':' + minutes + ' ' + ampm;
+			return strTime;
+		};
+		var formatDate = function (date) {
+			var d = new Date(date);
+			return d.toDateString() + " at " + formatAMPM(d);
+		};
+		$(document).on("ready", function () {
+			var visitorId = getUrlParameter('visitorId');
+			$.ajax({
+				url: window.location.origin +  "/gethistory?userId=" + visitorId,
+				type: 'get',
+				dataType: 'json',
+				success: function (data) {
+					console.log(data);
+					var messages = data;
+					var textMessages = [];
+					var chatContainer = $('.chat-container');
+					var messagesHtml = "";
+					for (var i = messages.length - 1; i >= 0 ; i--) {
+						var text = messages[i].components[0].data.text;
+						var innerhtml = "";
+						if (messages[i].type === "incoming") {
+							innerhtml = '<li class="fromCurrentUser "> \
+						<div class="extra-info">' + formatDate(messages[i].createdOn) + '</div> \
+				<div class="messageBubble"> \
+						<div>' + text + '</div> \
+						</div> \
+						</li>';
+						}
+						else {
+							innerhtml = '<li class="fromOtherUsers with-icon"> \
+						<div class="extra-info">' + formatDate(messages[i].createdOn) +'</div> \
+						<div class="profile-photo"> \
+								<div class="user-account avtar" \
+						style="background-image:url(\'libs/images/kora-blue.svg\')"></div> \
+								</div> \
+								<div class="messageBubble"> \
+								<div>' + text +'</div> \
+							</div> \
+							</li>';
+						}
+						messagesHtml += innerhtml;
+					}
+					$("#content").append(messagesHtml);
+				}
+			});
+		});
+	</script>
+	</body>
+</html>

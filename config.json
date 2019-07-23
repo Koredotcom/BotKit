@@ -3,7 +3,8 @@
         "port": 8003
     },
     "app": {
-        "apiPrefix" : ""
+        "apiPrefix" : "",
+        "url": "http://localhost"
     },
     "credentials": {
         "apikey": "test_api_key",

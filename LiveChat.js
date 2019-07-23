@@ -26,8 +26,8 @@ function getPendingMessages( visitorId, ssid, last_message_id){
     return api.getPendingMessages(visitorId, ssid,last_message_id, licence_id)
         .then(function(res){
             _.each(res.events, function(event){
+                var data = userDataMap[visitorId];
                 if(event.type === "message" && event.user_type !== "visitor"){
-                    var data = userDataMap[visitorId];
                     data.message = event.text;
                     data._originalPayload.message = data.text;
                     debug('replying ', event.text);
