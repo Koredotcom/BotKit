@@ -153,6 +153,8 @@ function onBotMessage(requestId, data, cb){
     else if(!entry)
     {
         sdk.sendUserMessage(data, cb);
+    }else if(data.message === "skipUserMessage"){ // condition for skipping a user message
+	sdk.skipUserMessage(data, cb);
     }
 }
 
@@ -178,7 +180,10 @@ function onUserMessage(requestId, data, cb){
             });
     }
     else {
-        return sdk.sendBotMessage(data, cb);
+	if(data.message === "skipBotMessage") // condition for skipping a bot message
+            return sdk.skipBotMessage(data, cb);
+        else    
+            return sdk.sendBotMessage(data, cb);
     }
 }
 
