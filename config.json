@@ -7,11 +7,13 @@
         "url": "http://localhost"
     },
     "credentials": {
-        "apikey": "test_api_key",
-        "appId": "test_app_id",
-        "st-67890":{
-            "apikey": "test_api_key2",
-            "appId": "test_app_id2"
+        "st-123":{
+            "apikey": "test_api_key_1",
+            "appId": "cs-test_app_id_1"
+        },
+        "st-456":{ 
+            "apikey": "test_api_key_2",
+            "appId": "cs-test_app_id_2"
         }
     },
     "redis": {
@@ -24,7 +26,13 @@
     "examples" : {
         "mockServicesHost"  : "http://localhost:8004"
     },
-    "liveagentlicense": "8947569",
+    "LiveChat":{
+        "api_version" : "v3.2",
+        "domian": "api.livechatinc",
+        "license_id": "8634584",
+        "clientId":"<live chat app client id>",
+        "client_secret":"<live chat client secret>"
+    },
     "supportsMessageAck": true,
     "languages":["en","de"]
 }

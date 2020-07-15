@@ -1,214 +1,191 @@
-var botId               = "st-f82726cb-4cd6-5ec4-bd35-7f5542b616dc";
-var botName             = "AgentTransferDemoBot";
-var sdk                 = require("./lib/sdk");
-var request             = require('request');
-var Promise             = require('bluebird');
-var request             = Promise.promisify(request);
-var api                 = require('./LiveChatAPI.js');
-var _                   = require('lodash');
-var config              = require('./config.json');
-var debug               = require('debug')("Agent");
-var schedular           = require('node-schedule');
-var _map                = {}; //used to store secure session ids //TODO: need to find clear map var
-var userDataMap         = {};//this will be use to store the data object for each user
-var userResponseDataMap = {};
+var config = require("./config");
+var botId = Object.keys(config.credentials)
+var botName = config.botName;
 
-/**
- * getPendingMessages
- *
- * @param {string} visitorId user id
- * @param {string} ssid session id of the live chat
- * @param {string} last message sent/received to/by agent 
-*/
-function getPendingMessages( visitorId, ssid, last_message_id){
-    debug("getPendingMessages: %s %s ", visitorId, ssid);
-    var licence_id = config.liveagentlicense;
-    return api.getPendingMessages(visitorId, ssid,last_message_id, licence_id)
-        .then(function(res){
-            _.each(res.events, function(event){
-                var data = userDataMap[visitorId];
-                if(event.type === "message" && event.user_type !== "visitor"){
-                    data.message = event.text;
-                    data._originalPayload.message = data.text;
-                    debug('replying ', event.text);
-                    _map[visitorId].last_message_id = event.message_id;
-                    return sdk.sendUserMessage(data, function(err){
-                        console.log("err", err);
-                    }).catch(function(e){
-                        console.log(e);
-                        debug("sending agent reply error", e);
-                        delete userResponseDataMap[visitorId];
-                        delete _map[visitorId];
-                    });
-                } else if (event.type==="chat_closed"){
-                    console.log('chat_closed');
-                    delete userResponseDataMap[visitorId];
-                    delete _map[visitorId];
-                    sdk.clearAgentSession(data);
-                }
-            });
-        })
-        .catch(function(e){
-            console.error(e);
-            delete userDataMap[visitorId];
-            delete _map[visitorId];
-        });
-}
+var sdk = require("./lib/sdk");
+var _ = require('lodash');
+var oAuth2 = require('./LiveChatOauth2');
+var customerAPIs = require('./LiveChatAPI').customerClass;
 
-/*
- * Schedule a joob to fetch messages every 5 seconds 
- */
-schedular.scheduleJob('*/5 * * * * *', function(){
-    debug('schedular triggered');
-    var promiseArr = [];
-    _.each(_map, function(entry){
-        promiseArr.push(getPendingMessages(entry.visitorId, entry.secured_session_id, entry.last_message_id));
-     });
-     return Promise.all(promiseArr).then(function(){
-         debug('scheduled finished');
-     }).catch(function(e) {
-         debug('error in schedular', e);
-     });
-});
-function gethistory(req, res){
-    var userId = req.query.userId;
-    var data = userDataMap[userId];
-    
-    if(data) {
-        data.limit = 100;
-        return sdk.getMessages(data, function(err, resp){
-            if(err){
-                res.status(400);
-                return res.json(err);
-            }
-            var messages = resp.messages;
-            res.status(200);
-            return res.json(messages);
-        });
-    } else {
-        var error = {
-            msg: "Invalid user",
-            code: 401
-        };
-        res.status(401);
-        return res.json(error);
-    }
-}
+var mChatIdvsVisitorId = {},
+    mVisitorIdvsChatDetails = {};
 
-/**
- * connectToAgent
- *
- * @param {string} requestId request id of the last event
- * @param {object} data last event data
- * @returns {promise}
- */
-function connectToAgent(requestId, data, cb){
-    var formdata = {};
-    formdata.licence_id = config.liveagentlicense;
-    formdata.welcome_message = "";
+function getVisitorId(data) {
     var visitorId = _.get(data, 'channel.channelInfos.from');
-    if(!visitorId){
-        visitorId = _.get(data, 'channel.from');
-    }
-    userDataMap[visitorId] = data;
-    data.message="An Agent will be assigned to you shortly!!!";
-    sdk.sendUserMessage(data, cb);
-    formdata.welcome_message = "Link for user Chat history with bot: "+ config.app.url +"/history/index.html?visitorId=" + visitorId;
-    return api.initChat(visitorId, formdata)
-         .then(function(res){
-             _map[visitorId] = {
-                 secured_session_id: res.secured_session_id,
-                 visitorId: visitorId,
-                 last_message_id: 0
-            };
-        });
+    if (!visitorId) visitorId = _.get(data, 'channel.from');
+    return visitorId;
 }
 
-/*
- * onBotMessage event handler
- */
-function onBotMessage(requestId, data, cb){
-    debug("Bot Message Data",data);
-    var visitorId = _.get(data, 'channel.from');
-    var entry = _map[visitorId];
-    if(data.message.length === 0 || data.message === '') {
-        return;
+function connectToAgent(data) {
+    var oAgentClass = new oAuth2.authoriseAgent();
+    var getAgentToken = oAgentClass.getToken();
+    var visitorId = getVisitorId(data);
+    var context = data.context;
+    var _dataObj = {
+        "name": _.get(context, 'session.UserContext.firstName', "Patron"),
+        "email": _.get(context, 'session.UserContext.emailId', "patron@kore.com")
     }
-    var message_tone = _.get(data, 'context.dialog_tone');
-    if(message_tone && message_tone.length> 0){
-        var angry = _.filter(message_tone, {tone_name: 'angry'});
-        if(angry.length){
-            angry = angry[0];
-            if(angry.level >=2){
-                connectToAgent(requestId, data);
-            }
-            else {
-                sdk.sendUserMessage(data, cb);
-            }
-        }
-        else {
-            sdk.sendUserMessage(data, cb);
-        }
-    }
-    else if(!entry)
-    {
-        sdk.sendUserMessage(data, cb);
-    }else if(data.message === "skipUserMessage"){ // condition for skipping a user message
-	sdk.skipUserMessage(data, cb);
+    var customerId = getAgentToken
+        .then((agentToken) => customerAPIs.createCustomer(agentToken, _dataObj));
+
+    mVisitorIdvsChatDetails[visitorId] = {
+        "data": data
+    };
+    //This will be displayed only if chat created/established
+    //In case of any exception, error message will be updated in catch block
+    var linkUrl = config.app.url + config.app.apiPrefix + "/history/index.html?visitorId=" + visitorId;
+    var historyTags = (context.historicTags && context.historicTags[0] && context.historicTags[0].tags) ? context.historicTags[0].tags.join("\n") : "";
+    var lastMessage = _.get(data, 'context.session.BotUserSession.lastMessage.messagePayload.message.body', "");
+    var agentWelcomeMessage = "Hi, I need ur help.\nChat history : " + linkUrl + "\nHistory tags : " + historyTags + "\nLast message : " + lastMessage;
+    var customerWelcomeMessage = "Hi I'm Live chat agent(Kore). How can I help you?";
+
+    return Promise.all([getAgentToken, customerId])
+        .then((arrOfAgentTokenAndId) => initiateChat(arrOfAgentTokenAndId[0], arrOfAgentTokenAndId[1], visitorId, agentWelcomeMessage))
+        .then(() => {
+            data.message = customerWelcomeMessage;
+            sdk.sendUserMessage(data)
+        })
+        .catch((err) => {
+            data.message = "*** " + err.message;
+            //No issues even if execute it Asynchronously
+            if (err.message.indexOf("Groups offline") > -1)
+                data.message = "I regret to inform that all agents are offline currently. Please get back to me after some time."
+            sdk.sendUserMessage(data);
+            clearChatTraces(data);
+            console.error("Error in connecting to agent :", err.message)
+        })
+}
+
+function initiateChat(agentToken, customerId, visitorId, welcomeMessage) {
+    console.log("Customer id : ", customerId, "\nVisitor id : ", visitorId);
+    var oCustomerToken = oAuth2.authoriseCustomer(agentToken, customerId);
+
+    return oCustomerToken.then((customerToken) => customerAPIs.startChat(customerToken))
+        .then((chatId) => {
+            //Todo: maintain only one obj instance and 1 accesstokens till it expires....
+            mVisitorIdvsChatDetails[visitorId]["customerToken"] = oCustomerToken.value();
+            mVisitorIdvsChatDetails[visitorId]["agentToken"] = agentToken;
+            mVisitorIdvsChatDetails[visitorId]["chatId"] = chatId;
+            mChatIdvsVisitorId[chatId] = visitorId;
+            mVisitorIdvsChatDetails[visitorId]["messageEventId"] = new Set(); //can store only unique values. Used to avoid double messages coming from agent
+            return customerAPIs.sendMessageToAgent(chatId, oCustomerToken.value(), welcomeMessage)
+        })
+        .catch((err) => {
+            console.error("Error in initiating Chat :", err.message);
+            return Promise.reject(err);
+        })
+}
+
+function sendToAgent(data) {
+    var visitorId = getVisitorId(data);
+    var customerToken = (mVisitorIdvsChatDetails[visitorId] && mVisitorIdvsChatDetails[visitorId]["customerToken"])
+    if (customerToken) {
+        var chatId = mVisitorIdvsChatDetails[visitorId]["chatId"];
+        console.log("To agent : ", visitorId, chatId, data.message);
+        if (data.message == "clear" || data.message == "quit" || data.message == "###")
+            return customerAPIs.sendMessageToAgeavailalent(chatId, customerToken, "Customer is exiting the conversation")
+                .then(customerAPIs.deActivateChat(chatId, customerToken))
+                .tap(clearChatTraces(data))
+        else
+            return customerAPIs.sendMessageToAgent(chatId, customerToken, data.message)
+    } else {
+        console.log("Agent not found.So clearing the session for ", visitorId);
+        data.message = "As Agent is not available, clearing the agent session";
+        return sdk.sendUserMessage(data)
+            .tap(clearChatTraces(data))
     }
 }
 
-/*
- * OnUserMessage event handler
- */
-function onUserMessage(requestId, data, cb){
-    debug("user message", data);
-    var visitorId = _.get(data, 'channel.from');
-    var entry = _map[visitorId];
-    if(entry){//check for live agent
-        //route to live agent
-        var formdata = {};
-        formdata.secured_session_id = entry.secured_session_id;
-        formdata.licence_id = config.liveagentlicense;
-        formdata.message = data.message;
-        return api.sendMsg(visitorId, formdata)
-            .catch(function(e){
-                console.error(e);
-                delete userDataMap[visitorId];
-                delete _map[visitorId];
-                return sdk.sendBotMessage(data, cb);
-            });
-    }
-    else {
-	if(data.message === "skipBotMessage") // condition for skipping a bot message
-            return sdk.skipBotMessage(data, cb);
-        else    
-            return sdk.sendBotMessage(data, cb);
-    }
-}
-
-/*
- * OnAgentTransfer event handler
- */
-function onAgentTransfer(requestId, data, callback){
-    connectToAgent(requestId, data, callback);
+function clearChatTraces(data) {
+    var visitorId = getVisitorId(data);
+    sdk.clearAgentSession(data);
+    var eventIdsSet = (mVisitorIdvsChatDetails[visitorId] && mVisitorIdvsChatDetails[visitorId]["messageEventId"]);
+    if (eventIdsSet) eventIdsSet.clear();
+    mVisitorIdvsChatDetails[visitorId] = undefined;
+    var chatId = Object.keys(mChatIdvsVisitorId).find(visitorId => mChatIdvsVisitorId[visitorId] === visitorId);
+    mChatIdvsVisitorId[chatId] = undefined;
 }
 
 module.exports = {
-    botId : botId,
-    botName : botName,
-    on_user_message : function(requestId, data, callback) {
-        console.log('data', data);
-        debug('on_user_message');
-        onUserMessage(requestId, data, callback);
+    botId: botId,
+    botName: botName,
+
+    on_user_message: function (requestId, data, callback) {
+        if (!data.agent_transfer) {
+            if (data.message === "skipBotMessage") // condition for skipping a bot message
+                return sdk.skipBotMessage(data, callback);
+            else
+                return sdk.sendBotMessage(data, callback); //Forward the message to bot
+        } else //Agent mode
+            return sendToAgent(data)
     },
-    on_bot_message : function(requestId, data, callback) {
-        debug('on_bot_message');
-        onBotMessage(requestId, data, callback);
+    on_bot_message: function (requestId, data, callback) {
+        if (data.message === "skipUserMessage") // condition for skipping a user message
+            sdk.skipUserMessage(data, callback);
+        else
+            return sdk.sendUserMessage(data, callback); //Sends back the message to user
     },
-    on_agent_transfer : function(requestId, data, callback) {
-        debug('on_webhook');
-        onAgentTransfer(requestId, data, callback);
+    on_agent_transfer: function (requestId, data, callback) {
+        data.message = "An Agent will be assigned to you shortly!!!";
+        return sdk.sendUserMessage(data).then(() => connectToAgent(data));
     },
-    gethistory: gethistory
+    on_event: function (requestId, data, callback) {
+        console.log("on_event -->  Event : ", data.event);
+        return callback(null, data);
+    },
+    on_alert: function (requestId, data, callback) {
+        console.log("on_alert -->  : ", data, data.message);
+        return sdk.sendAlertMessage(data, callback);
+    },
+    showEventsFromAgent: function (req, res) {
+        var oEvent = req.body;
+        var chatId = _.get(oEvent, 'payload.chat_id');
+        var visitorId = mChatIdvsVisitorId[chatId];
+        var data = (mVisitorIdvsChatDetails[visitorId] && mVisitorIdvsChatDetails[visitorId]["data"]);
+        var eventId = _.get(oEvent, 'payload.event.id', "---");
+        var eventIdsSet = (mVisitorIdvsChatDetails[visitorId] && mVisitorIdvsChatDetails[visitorId]["messageEventId"]);
+        
+        if (eventIdsSet && eventIdsSet.has(eventId))
+            return res.send("Bad event received");
+        
+            var action = _.get(oEvent, 'action');
+        var text = _.get(oEvent, 'payload.event.text', "Something from agent");
+        
+        if (data) {
+            mVisitorIdvsChatDetails[visitorId]["messageEventId"].add(eventId);
+            if (action === 'chat_user_removed') {
+                data.message = "Agent has closed the session";
+                clearChatTraces(data);
+            } else if (action === 'incoming_event')
+                data.message = text
+            console.log("From agent : ", visitorId, chatId, action, data.message);
+            return sdk.sendUserMessage(data);
+        } else {
+            console.log("Map objects cleared : ", visitorId, chatId, action, text);
+            res.send("Data object not found");
+        }
+    },
+    gethistory: function gethistory(req, res) {
+        var visitorId = req.query.userId;
+        var data = (mVisitorIdvsChatDetails[visitorId] && mVisitorIdvsChatDetails[visitorId]["data"]);
+        if (data) {
+            data.limit = 100;
+            return sdk.getMessages(data, function (err, resp) {
+                if (err) {
+                    res.status(400);
+                    return res.json(err);
+                }
+                var messages = resp.messages;
+                res.status(200);
+                return res.json(messages);
+            });
+        } else {
+            var error = {
+                msg: "Invalid user",
+                code: 401
+            };
+            res.status(401);
+            return res.json(error);
+        }
+    }
 };

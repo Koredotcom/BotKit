@@ -1,70 +1,117 @@
-var botId    = "st-0954eedb-889c-5491-9f92-f5671760c942";
-var botName  = "LiveChat";
-var sdk      = require("./lib/sdk");
-var Promise  = require('bluebird');
-var request = require('request-promise');
-var template = require('url-template');
+var rp = require('request-promise');
 
+var liveChat = require('./config.json').LiveChat;
+var baseUrl = 'https://' + liveChat.domian + '.com/' + liveChat.api_version;
+var agentUrl = baseUrl + '/agent/action/';
+var customerUrl = baseUrl + '/customer/action/';
 
-var initUrl = "https://api.livechatinc.com/visitors/{visitorId}/chat/start";
-function initChat(visitorId, data){
-    var url = template.parse(initUrl).expand({visitorId: visitorId});
-    var options = {
-        method: 'POST',
-        uri: url,
-        form: data,
-        headers: {
-            'content-type': 'application/x-www-form-urlencoded',  // Set automatically
-            'X-API-Version': 2,
-            'Accept': 'application/json'
-        }
-    };
-    return request(options).then(function(res){
-        return JSON.parse(res);
-    })
-    .catch(function(err){
-        return Promise.reject(err);
-    });
+// Live chat Agent transfer 3.2
+/*_______________________________*/
+//Live chat v3.x agent transfer integration can be achevied via 2 methods :
+//      a) RTM=> websocket based
+//      b) XHR request (Rest APIs)  based
+//This sdk code demonstrates method 2: Rest API based integration.
+//Semantics:
+//1) Create a server side app in 'developers.livechat\Apps' & client id & client secret. Associate necessary scopes.
+//2) By oAuth2 (Authorisation code)  get agent access token using agent APIs for the app created
+//3) With this agent access token, create a customer access token using customer APIs
+//4) Customer access token will be used for all subsequent interactions
+//5) Chat will be initiated by start_chat api
+//6) Messages from customer(kore user) will be sent to Live chat agent using Customer -send_event api
+//7) A webhook is configured in 'developers.livechat\Tools\webhook configurator' which to actually listen to 'incoming_event'(filtered for 'author_type': 'agent') & 'chat_user_removed' .
+//8) 'incoming_event' webhook is used to get messages from Live chat agent to the kore user
+//9) Similarly, 'chat_user_removed' is used for notfying chat end events
+
+var customerClass = {
+    startChat: function (customerAccessToken) {
+        var options = {
+            'method': 'POST',
+            'url': customerUrl + 'start_chat?license_id=' + liveChat.license_id,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + customerAccessToken
+            },
+            body: JSON.stringify({})
+        };
+        return rp(options).then(function (chatDetails) {
+            console.log("chatDetails : ", chatDetails);
+            var parResp = JSON.parse(chatDetails);
+            return parResp.chat_id;
+        }).catch(function (err) {
+            console.error("Error in starting chat");
+            return Promise.reject(err);
+        });
+    },
+
+    deActivateChat: function (chat_id, customerAccessToken, isAgent = false) {
+        //if not agent customer is closing the chat
+        var options = {
+            'method': 'POST',
+            'url': (isAgent) ? agentUrl : customerUrl + 'deactivate_chat?license_id=' + liveChat.license_id,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + customerAccessToken
+            },
+            body: JSON.stringify({
+                "chat_id": chat_id
+            })
+        };
+        return rp(options).then(function (response) {
+            console.log("Deactivating : ", chat_id);
+        }).catch(function (err) {
+            console.error("Error in deactivating chat");
+            return Promise.reject(err);
+        });
+    },
+    createCustomer: function (agentAccessToken, oBody) {
+        var options = {
+            'method': 'POST',
+            'url': agentUrl + '/create_customer',
+            'headers': {
+                'content-type': 'application/json',
+                'Authorization': 'Bearer ' + agentAccessToken
+            },
+            body: JSON.stringify({
+                "name": oBody.name,
+                "email": oBody.email,
+                "avatar": "https://example.com/avatar.png"
+            })
+        };
+        return rp(options).then(function (response) {
+            var parResp = JSON.parse(response);
+            return parResp.customer_id;
+        }).catch(function (err) {
+            console.error("Error in creating customer");
+            return Promise.reject(err);
+        })
+    },
+    sendMessageToAgent: function (chat_id, customerAccessToken, text, eventType = "message") {
+        //Todo: support for other event types
+        var options = {
+            'method': 'POST',
+            'url': customerUrl + '/send_event?license_id=' + liveChat.license_id,
+            'headers': {
+                'content-type': 'application/json',
+                'Authorization': 'Bearer ' + customerAccessToken
+            },
+            body: JSON.stringify({
+                "chat_id": chat_id,
+                "event": {
+                    "type": eventType,
+                    "text": text,
+                    "recipients": "all"
+                }
+            })
+        };
+        return rp(options).then(function (response) {
+            var parResp = JSON.parse(response);
+            console.log("sendMessageToAgent : ", parResp);
+            return parResp.customer_id;
+        }).catch(function (err) {
+            console.error("Error in sending message to agent");
+            return Promise.reject(err);
+        })
+    }
 }
 
-var sendMsgUrl = "https://api.livechatinc.com/visitors/{visitorId}/chat/send_message";
-function sendMsg(visitorId, data){
-    var url = template.parse(sendMsgUrl).expand({visitorId: visitorId});
-    var options = {
-        method: 'POST',
-        uri: url,
-        form: data,
-        headers: {
-            'content-type': 'application/x-www-form-urlencoded',  // Set automatically
-            'X-API-Version': 2
-        }
-    };
-    return request(options).then(function(res){
-        return JSON.parse(res);
-    })
-    .catch(function(err){
-        return Promise.reject(err);
-    });
-}
-
-var getMsgUrl = "https://api.livechatinc.com/visitors/{visitorId}/chat/get_pending_messages?licence_id={licence_id}&secured_session_id={secured_session_id}&last_message_id={last_message_id}";
-function getPendingMessages(visitorId, ssid,last_message_id,  licence_id){
-    var url = template.parse(getMsgUrl).expand({visitorId: visitorId, secured_session_id: ssid, licence_id: licence_id, last_message_id: last_message_id});
-    var options = {
-        method: 'GET',
-        uri: url,
-        headers: {
-            'content-type': 'application/x-www-form-urlencoded',  // Set automatically
-            'X-API-Version': 2
-        }
-    };
-    return request(options).then(function(res){
-        return JSON.parse(res);
-    })
-    .catch(function(err){
-        return Promise.reject(err);
-    });
-}
-module.exports.initChat = initChat;
-module.exports.sendMsg = sendMsg;
-module.exports.getPendingMessages = getPendingMessages;
+module.exports.customerClass = customerClass;
