@@ -13,7 +13,7 @@ var oAuth2Class = {
             'method': 'GET',
             'url': baseAccountsUrl + '?response_type=code&client_id=' + liveChat.clientId + '&redirect_uri=' + redirect_uri,
             'headers': {
-                'Cookie': '_gcl_au=1.1.658563599.1593424692; _ga=GA1.3.281353257.1593424692; _fbp=fb.1.1593424692641.667847735; amplitude_id_841104a62d8040f86beb1b507a0ea8eelivechat.com=eyJkZXZpY2VJZCI6ImUxNDc1NDcxLWRhMmEtNGYwMC05ZjUxLTY3ZGI3ZGQ0YjE4OVIiLCJ1c2VySWQiOm51bGwsIm9wdE91dCI6ZmFsc2UsInNlc3Npb25JZCI6MTU5MzQyNDY5MTUxNSwibGFzdEV2ZW50VGltZSI6MTU5MzQyNDcwNzUyNSwiZXZlbnRJZCI6MSwiaWRlbnRpZnlJZCI6MCwic2VxdWVuY2VOdW1iZXIiOjF9; __ia_3_v3=77cccfdaf66fb5a69ff571d97545ec48088a221129ca231c11ce8fb05c3acbd3'
+                'Cookie': 'landing_page=https://accounts.livechat.com/; _gcl_au=1.1.1866967038.1599663551; _ga=GA1.2.1276177896.1599663551; _gid=GA1.2.1512219778.1599663551; _fbp=fb.1.1599663551441.2099797795; amplitude_id_841104a62d8040f86beb1b507a0ea8eelivechat.com=eyJkZXZpY2VJZCI6IjE1MTkwYjkyLTFjZWMtNDgxZi1iNTQ2LWMyMDBhMjk1ZjZkYlIiLCJ1c2VySWQiOm51bGwsIm9wdE91dCI6ZmFsc2UsInNlc3Npb25JZCI6MTU5OTY2MzU1MTI0OCwibGFzdEV2ZW50VGltZSI6MTU5OTY2MzU3MDE5MiwiZXZlbnRJZCI6MiwiaWRlbnRpZnlJZCI6MCwic2VxdWVuY2VOdW1iZXIiOjJ9; __ia_3_v3=7eeeee90d660dd6c2ff56e6da685f6649c6e7ebf564c02145262c07cd8306fce'
             }
         };
         return rp(options).then(function (response) {
@@ -55,7 +55,7 @@ function getCustomerAccessToken(agentToken, customerId) {
         'headers': {
             'Authorization': 'Bearer ' + agentToken,
             'Content-Type': 'application/json',
-            'Cookie': '_gcl_au=1.1.658563599.1593424692; _ga=GA1.3.281353257.1593424692; _fbp=fb.1.1593424692641.667847735; amplitude_id_841104a62d8040f86beb1b507a0ea8eelivechat.com=eyJkZXZpY2VJZCI6ImUxNDc1NDcxLWRhMmEtNGYwMC05ZjUxLTY3ZGI3ZGQ0YjE4OVIiLCJ1c2VySWQiOm51bGwsIm9wdE91dCI6ZmFsc2UsInNlc3Npb25JZCI6MTU5MzQyNDY5MTUxNSwibGFzdEV2ZW50VGltZSI6MTU5MzQyNDcwNzUyNSwiZXZlbnRJZCI6MSwiaWRlbnRpZnlJZCI6MCwic2VxdWVuY2VOdW1iZXIiOjF9; __ia_3_v3=77cccfdaf66fb5a69ff571d97545ec48088a221129ca231c11ce8fb05c3acbd3'
+            'Cookie': 'landing_page=https://accounts.livechat.com/; _gcl_au=1.1.1866967038.1599663551; _ga=GA1.2.1276177896.1599663551; _gid=GA1.2.1512219778.1599663551; _fbp=fb.1.1599663551441.2099797795; amplitude_id_841104a62d8040f86beb1b507a0ea8eelivechat.com=eyJkZXZpY2VJZCI6IjE1MTkwYjkyLTFjZWMtNDgxZi1iNTQ2LWMyMDBhMjk1ZjZkYlIiLCJ1c2VySWQiOm51bGwsIm9wdE91dCI6ZmFsc2UsInNlc3Npb25JZCI6MTU5OTY2MzU1MTI0OCwibGFzdEV2ZW50VGltZSI6MTU5OTY2MzU3MDE5MiwiZXZlbnRJZCI6MiwiaWRlbnRpZnlJZCI6MCwic2VxdWVuY2VOdW1iZXIiOjJ9; __ia_3_v3=7eeeee90d660dd6c2ff56e6da685f6649c6e7ebf564c02145262c07cd8306fce'
         },
         body: JSON.stringify({
             "client_id": liveChat.clientId,
