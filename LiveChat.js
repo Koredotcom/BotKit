@@ -83,7 +83,7 @@ function sendToAgent(data) {
         var chatId = mVisitorIdvsChatDetails[visitorId]["chatId"];
         console.log("To agent : ", visitorId, chatId, data.message);
         if (data.message == "clear" || data.message == "quit" || data.message == "###")
-            return customerAPIs.sendMessageToAgeavailalent(chatId, customerToken, "Customer is exiting the conversation")
+            return customerAPIs.sendMessageToAgent(chatId, customerToken, "Customer is exiting the conversation")
                 .then(customerAPIs.deActivateChat(chatId, customerToken))
                 .tap(clearChatTraces(data))
         else
