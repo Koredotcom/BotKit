@@ -1,17 +1,17 @@
 var rp = require('request-promise');
 
 var liveChat = require('./config.json').LiveChat;
-var baseUrl = 'https://' + liveChat.domian + '.com/' + liveChat.api_version;
+var baseUrl = 'https://' + liveChat.domain + '.com/' + liveChat.api_version;
 var agentUrl = baseUrl + '/agent/action/';
 var customerUrl = baseUrl + '/customer/action/';
 
 // Live chat Agent transfer 3.2
 /*_______________________________*/
-//Live chat v3.x agent transfer integration can be achevied via 2 methods :
+// Live chat v3.x agent transfer integration can be achevied via 2 methods :
 //      a) RTM=> websocket based
 //      b) XHR request (Rest APIs)  based
-//This sdk code demonstrates method 2: Rest API based integration.
-//Semantics:
+// This sdk code demonstrates method 2: Rest API based integration.
+// Semantics:
 //1) Create a server side app in 'developers.livechat\Apps' & client id & client secret. Associate necessary scopes.
 //2) By oAuth2 (Authorisation code)  get agent access token using agent APIs for the app created
 //3) With this agent access token, create a customer access token using customer APIs

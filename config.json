@@ -3,17 +3,19 @@
         "port": 8003
     },
     "app": {
-        "apiPrefix" : "",
-        "url": "http://localhost"
+        "apiPrefix" : "/liveChat",
+        "url": "https://f8179663b1d3.ngrok.io"
     },
     "credentials": {
-        "st-123":{
-            "apikey": "test_api_key_1",
-            "appId": "cs-test_app_id_1"
+        "st-ef82c7ec-aeeb-5a1e-b213-856dc71e50c7":{
+            "apikey": "ldF4eEFIzqTlqZqb5JG3k7Et9EDijFlsCQiTHFL2C5A=",
+            "appId": "cs-a264d567-cbb4-58ba-afb3-64607eb2d688",
+            "botName":"LiveChat3.2"
         },
-        "st-456":{ 
-            "apikey": "test_api_key_2",
-            "appId": "cs-test_app_id_2"
+        "st-ae0b5e9f-ed2c-5ef4-8f34-2300b5ee07f9":{ 
+            "apikey": "sEUDyIdSnkEYWN+esJphMUCXNJGH/B3yxHcM0xtjfMs=",
+            "appId": "cs-d87dd1fc-be90-5a43-bd01-f76c7051e9a0",
+            "botName":"TestBot"
         }
     },
     "redis": {
@@ -28,10 +30,11 @@
     },
     "LiveChat":{
         "api_version" : "v3.2",
-        "domian": "api.livechatinc",
+        "domain": "api.livechatinc",
         "license_id": "8634584",
-        "clientId":"<live chat app client id>",
-        "client_secret":"<live chat client secret>"
+        "clientId":"26137a9ddd6897caab38bb1376123f65",
+        "client_secret":"LpZrz9rXW8TiLxnxUtO9kEATEScS7O7P",
+        "cookie":"landing_page=https://accounts.livechat.com/; _gcl_au=1.1.1373983769.1599750161; _ga=GA1.2.579948598.1599750161; _gid=GA1.2.645844940.1599750161; _dc_gtm_UA-193291-34=1; _fbp=fb.1.1599750161849.1097227672; amplitude_id_841104a62d8040f86beb1b507a0ea8eelivechat.com=eyJkZXZpY2VJZCI6IjczMGI2ODQ3LTJhNjktNGVhYy05YmRjLTYwMWUzNTJiNWY2M1IiLCJ1c2VySWQiOm51bGwsIm9wdE91dCI6ZmFsc2UsInNlc3Npb25JZCI6MTU5OTc1MDE2MTI5NCwibGFzdEV2ZW50VGltZSI6MTU5OTc1MDE3MDE0MiwiZXZlbnRJZCI6MSwiaWRlbnRpZnlJZCI6MCwic2VxdWVuY2VOdW1iZXIiOjF9; __limiter=c=2&i=f0ba6455-c068-4933-8820-14fb90f8fac0&t=1599750030; __ia_3_v3=07ac29804a3481918987c20e531ad75d3d58bc4a0280ae5344b015768a7e0936"
     },
     "supportsMessageAck": true,
     "languages":["en","de"]
