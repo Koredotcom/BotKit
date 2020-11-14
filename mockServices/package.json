@@ -8,7 +8,7 @@
     "express": "^3.21.2",
     "express-handlebars": "^3.0.0",
     "jsonwebtoken": "^7.2.1",
-    "mongodb": "^2.2.16",
+    "mongodb": "^3.6.1",
     "passport": "^0.2.2",
     "passport-facebook": "^1.0.3",
     "passport-google": "^0.3.0",
