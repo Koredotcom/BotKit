@@ -38,7 +38,8 @@
 			var d = new Date(date);
 			return d.toDateString() + " at " + formatAMPM(d);
 		};
-		$(document).on("ready", function () {
+		// $(document).on("ready", function () {
+		$(document).ready(function () {
 			var visitorId = getUrlParameter('visitorId');
 			$.ajax({
 				url: window.location.origin +  "/gethistory?userId=" + visitorId,
