@@ -35,7 +35,7 @@
     "ipaddr.js": "^1.1.1",
     "jsonlint": "^1.6.0",
     "jwt-simple": "^0.5.6",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "media-typer": "^0.3.0",
     "merge-descriptors": "^1.0.1",
     "methods": "^1.1.2",
