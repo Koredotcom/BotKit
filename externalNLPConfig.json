@@ -1,0 +1,12 @@
+{
+    "dialogFlow": {
+        "serviceFileName": "",
+        "projectId": "",
+        "languageCode": "en-US"
+    },
+    "luis": {
+        "appId": "",
+        "subscriptionKey": "",
+        "baseUrl": ""
+    }
+}
