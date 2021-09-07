@@ -6,6 +6,9 @@
         "apiPrefix" : "",
         "url": "http://localhost"
     },
+    "validations": {
+        "leastNodeVersion": 10
+    },
     "credentials": {
         "apikey": "test_api_key",
         "appId": "test_app_id",

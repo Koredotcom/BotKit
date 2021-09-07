@@ -6,6 +6,8 @@ var config      = require("./config");
 var app    = new Application(null, config);
 var server = new Server(config, app);
 
+sdk.checkNodeVersion();
+
 server.start();
 
 sdk.registerBot(require('./FindAFlight.js'));
