@@ -1,6 +1,5 @@
 # is-nan <sup>[![Version Badge][2]][1]</sup>
 
-[![Build Status][3]][4]
 [![dependency status][5]][6]
 [![dev dependency status][7]][8]
 [![License][license-image]][license-url]
@@ -38,15 +37,13 @@ assert.ok(Number.isNaN(NaN));
 Simply clone the repo, `npm install`, and run `npm test`
 
 [1]: https://npmjs.org/package/is-nan
-[2]: http://versionbadg.es/es-shims/is-nan.svg
-[3]: https://travis-ci.org/es-shims/is-nan.svg
-[4]: https://travis-ci.org/es-shims/is-nan
+[2]: https://versionbadg.es/es-shims/is-nan.svg
 [5]: https://david-dm.org/es-shims/is-nan.svg
 [6]: https://david-dm.org/es-shims/is-nan
 [7]: https://david-dm.org/es-shims/is-nan/dev-status.svg
 [8]: https://david-dm.org/es-shims/is-nan#info=devDependencies
 [11]: https://nodei.co/npm/is-nan.png?downloads=true&stars=true
-[license-image]: http://img.shields.io/npm/l/is-nan.svg
+[license-image]: https://img.shields.io/npm/l/is-nan.svg
 [license-url]: LICENSE
-[downloads-image]: http://img.shields.io/npm/dm/is-nan.svg
-[downloads-url]: http://npm-stat.com/charts.html?package=is-nan
+[downloads-image]: https://img.shields.io/npm/dm/is-nan.svg
+[downloads-url]: https://npm-stat.com/charts.html?package=is-nan
