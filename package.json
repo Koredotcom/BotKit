@@ -42,7 +42,7 @@
     "morgan": "^1.10.0",
     "ms": "^0.7.1",
     "negotiator": "^0.6.1",
-    "node-schedule": "^1.3.2",
+    "node-schedule": "^2.1.0",
     "on-finished": "^2.3.0",
     "on-headers": "^1.0.1",
     "parseurl": "^1.3.1",
@@ -51,7 +51,7 @@
     "range-parser": "^1.2.0",
     "raw-body": "^2.1.7",
     "redeyed": "^0.4.4",
-    "redis": "^3.1.1",
+    "redis": "^4.1.0",
     "redis-commands": "^1.3.0",
     "redis-parser": "^2.0.4",
     "request": "^2.88.2",
@@ -65,12 +65,11 @@
     "unpipe": "^1.0.0",
     "url-template": "^2.0.8",
     "utils-merge": "^1.0.0",
-    "validator": "^13.6.0",
+    "validator": "^13.7.0",
     "varify": "^0.1.1",
     "vary": "^1.1.0",
     "wordwrap": "^0.0.3"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
