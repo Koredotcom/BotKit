@@ -39,7 +39,7 @@
     "mime-db": "^1.24.0",
     "mime-types": "^2.1.12",
     "morgan": "^1.10.0",
-    "ms": "^0.7.1",
+    "ms": "^2.0.0",
     "negotiator": "^0.6.1",
     "node-schedule": "^2.1.0",
     "on-finished": "^2.3.0",
