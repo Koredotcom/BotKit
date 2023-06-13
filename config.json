@@ -29,5 +29,8 @@
     },
     "liveagentlicense": "8947569",
     "supportsMessageAck": true,
-    "languages":["en","de"]
+    "languages":["en","de"],
+    "headers": {
+        "user-agent": "Kore/BotKit"
+    }
 }
