@@ -17,6 +17,14 @@
             "appId": "test_app_id2"
         }
     },
+    "jwt": {
+        "jwtAlgorithm": "HS256",
+        "jwt-expiry": 60,
+        "st-67890":{
+            "jwtAlgorithm": "HS512",
+            "jwt-expiry": 60
+        }
+    },
     "redis": {
         "options": {
             "host": "localhost",
