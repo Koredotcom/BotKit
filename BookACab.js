@@ -2,9 +2,9 @@ var botId          = "st-007da037-67f9-55c3-bf93-6272ca639359";
 var botName        = "Book a Cab";
 var sdk            = require("./lib/sdk");
 var Promise        = sdk.Promise;
-var request        = require("request");
 var config         = require("./config");
 var mockServiceUrl = config.examples.mockServicesHost + '/cabbot';
+var { makeHttpCall } = require("./makeHttpCall");
 
 /*
  * This example showcases the 2 different ways to use the webhook node:
@@ -15,15 +15,15 @@ var mockServiceUrl = config.examples.mockServicesHost + '/cabbot';
 //Make request to mockservice app
 function findCabs(/*userLoc*/) {
     return new Promise(function(resolve, reject) {
-        request({
-            url: mockServiceUrl + '/findcabs',
-            method: 'get',
-        }, function(err, res) {
-            if (err) {
-                return reject(err);
-            }
-            resolve(res.body);
-        });
+        makeHttpCall(
+            'get',
+            mockServiceUrl + '/findcabs'
+        )
+        .then(function(res) {
+            resolve(res.data);
+        }).catch(function(err) {
+            return reject(err);
+        })
     });
 }
 
@@ -32,31 +32,31 @@ function findCabs(/*userLoc*/) {
  */
 function cabBookingService(requestId, cabId, userLoc, destination, callbacks) {
     return new Promise(function(resolve, reject) {
-        request({
-            url: mockServiceUrl + '/findcabs',
-            method: 'post',
-            headers: {
-                'content-type' : 'application/json'
-            },
-            body: {
+        makeHttpCall(
+            'post',
+            mockServiceUrl + '/findcabs',
+            {
                 requestId   : requestId,
                 cabId       : cabId,
                 loc         : userLoc,
                 destination : destination
             },
-            json: true
-        }, function(err, res) {
-            if (err || !res.body) {
-                return reject(err);
+            {
+                'content-type' : 'application/json'
             }
-            if (res.body.success) {
+        )
+        .then(function(res) {
+            if (res.data && res.data.success) {
                 callbacks.on_success(requestId);
                 return;
             } else {
                 callbacks.on_failure(requestId);
             }
             resolve(res);
-        });
+        })
+        .catch(function(err){
+            return reject(err);
+        })
     });
 }
 
