@@ -1,5 +1,5 @@
-var botId               = "st-f82726cb-4cd6-5ec4-bd35-7f5542b616dc";
-var botName             = "AgentTransferDemoBot";
+var botId               = "st-a482bd38-c5bd-5045-b771-b1ba8df0438e";
+var botName             = "demo SDK bot";
 var sdk                 = require("./lib/sdk");
 var request             = require('request');
 var Promise             = require('bluebird');
