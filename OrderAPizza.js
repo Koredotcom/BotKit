@@ -2,7 +2,7 @@ var botId          = "st-c25b022b-c979-5d63-95b1-0045ee45b0ba";
 var botName        = "OrderPizza";
 var sdk            = require("./lib/sdk");
 var Promise        = sdk.Promise;
-var request        = require("request");
+var { makeHttpCall } = require("./makeHttpCall");
 var config         = require("./config");
 var mockServiceUrl = config.examples.mockServicesHost + '/pizzabot';
 
@@ -14,30 +14,32 @@ var mockServiceUrl = config.examples.mockServicesHost + '/pizzabot';
  */
 function placeOrderToStore(requestId, storeId, order, callbacks) {
     return new Promise(function(resolve, reject) {
-        request({
-            url: mockServiceUrl + '/',
-            method: 'post',
-            headers: {
-                'content-type' : 'application/json'
-            },
-            body: {
-                requestId : requestId,
-                storeId   : storeId,
-                order     : order
-            },
-            json: true
-        }, function(err, res) {
-            if (err || !res.body) {
-                return reject(err);
-            }
-            if (res.body.success) {
-                callbacks.on_success(requestId, res.body);
+        let data = {
+            requestId : requestId,
+            storeId   : storeId,
+            order     : order
+        }
+        let headers = {
+            'content-type' : 'application/json'
+        }
+        makeHttpCall(
+            'post',
+            mockServiceUrl + '/',
+            data,
+            headers
+        )
+        .then(function(res) {
+            if (res.data && res.data.success) {
+                callbacks.on_success(requestId, res.data);
                 return;
             } else {
                 callbacks.on_failure(requestId);
             }
             resolve(res);
-        });
+        })
+        .catch(function(err) {
+            return reject(err);
+        })
     });
 }
 
