@@ -11,7 +11,6 @@
  var botId   = config.credentials.botId; //BotID from Kore.ai - Refer to settings section
  var botName = config.credentials.botName;  //botname from Kore.ai
  var externalNLPConfig = require('./externalNLPConfig.json');
- var request = require('request-promise');
  const dialogflow = require('@google-cloud/dialogflow');
  const uuid = require('uuid');
  var Promise = sdk.Promise;
@@ -23,6 +22,7 @@
  });
  const sessionId = uuid.v4();
  const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
+ var { makeHttpCall } = require("./makeHttpCall");
  
  //Dialog Flow sdk call for intent recognization
  function getIntentFromDialogFlow(message){
@@ -50,17 +50,18 @@
  //Luis.ai function for entity recognization
  function getEntitiesFromluis(message){
     return new Promise(function(resolve, reject) {
-         request({
-         // Update the below url with the Luis.ai bot configuration.
-             url: externalNLPConfig.luis.baseUrl + 'luis/prediction/v3.0/apps/'+ externalNLPConfig.luis.appId+'/slots/'+ externalNLPConfig.luis.slot+'/predict?subscription-key='+externalNLPConfig.luis.subscriptionKey+'&verbose=true&show-all-intents=true&log=true&query='+message,
-             method: 'GET'
-         }, function(error, res) {
-             if (error || !res.body) {
-                 reject({error:error});
-             }else{
-                 resolve(JSON.parse(res.body));
-      }
-         });
+        // Update the below url with the Luis.ai bot configuration.
+        let url = externalNLPConfig.luis.baseUrl + 'luis/prediction/v3.0/apps/'+ externalNLPConfig.luis.appId+'/slots/'+ externalNLPConfig.luis.slot+'/predict?subscription-key='+externalNLPConfig.luis.subscriptionKey+'&verbose=true&show-all-intents=true&log=true&query='+message;
+        makeHttpCall(
+            'get',
+            url
+        )
+        .then(function(res) {
+            resolve(res.data);
+        })
+        .catch(function(error) {
+            reject({error:error});
+        })
      });
  }
  

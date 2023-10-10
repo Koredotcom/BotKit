@@ -2,9 +2,9 @@ var botId          = "st-007da037-67f9-55c3-bf93-6272ca639359";
 var botName        = "Book a Cab";
 var sdk            = require("./lib/sdk");
 var Promise        = sdk.Promise;
-var request        = require("request");
 var config         = require("./config");
 var mockServiceUrl = config.examples.mockServicesHost + '/cabbot';
+var { makeHttpCall } = require("./makeHttpCall");
 
 
 /*
@@ -12,15 +12,16 @@ var mockServiceUrl = config.examples.mockServicesHost + '/cabbot';
  */
 function findCabs(/*userLoc*/) {
     return new Promise(function(resolve, reject) {
-        request({
-            url: mockServiceUrl + '/findcabs',
-            method: 'get',
-        }, function(err, res) {
-            if (err) {
-                return reject(err);
-            }
+        makeHttpCall(
+            'get',
+            mockServiceUrl + '/findcabs'
+        )
+        .then(function(res) {
             resolve(res);
-        });
+        })
+        .catch(function(err){
+            return reject(err);
+        })
     });
 }
 
