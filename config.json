@@ -4,14 +4,14 @@
     },
     "app": {
         "apiPrefix" : "",
-        "url": "https://0ddf-122-174-183-138.ngrok-free.app"
+        "url": "http://localhost"
     },
     "validations": {
-        "leastNodeVersion": 10
+        "leastNodeVersion": 12
     },
     "credentials": {
-        "apikey": "tz4fhIiIPg6c1JHnP7tiZBtGfeCtCydlv6rbc6k4acw=",
-        "appId": "cs-9a909c58-c5a9-569d-aa7c-1f36f94b23ad",
+        "apikey": "test_api_key",
+        "appId": "test_app_id",
         "st-67890":{
             "apikey": "test_api_key2",
             "appId": "test_app_id2"
@@ -28,7 +28,8 @@
     "redis": {
         "options": {
             "host": "localhost",
-            "port": 6379
+            "port": 6379,
+            "legacyMode": true
         },
         "available": false
     },
