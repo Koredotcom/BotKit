@@ -20,7 +20,7 @@ const validators = validator.validators;
  */
 class Axios {
   constructor(instanceConfig) {
-    this.defaults = instanceConfig;
+    this.defaults = instanceConfig || {};
     this.interceptors = {
       request: new InterceptorManager(),
       response: new InterceptorManager()
@@ -35,7 +35,34 @@ class Axios {
    *
    * @returns {Promise} The Promise to be fulfilled
    */
-  request(configOrUrl, config) {
+  async request(configOrUrl, config) {
+    try {
+      return await this._request(configOrUrl, config);
+    } catch (err) {
+      if (err instanceof Error) {
+        let dummy = {};
+
+        Error.captureStackTrace ? Error.captureStackTrace(dummy) : (dummy = new Error());
+
+        // slice off the Error: ... line
+        const stack = dummy.stack ? dummy.stack.replace(/^.+\n/, '') : '';
+        try {
+          if (!err.stack) {
+            err.stack = stack;
+            // match without the 2 top stack lines
+          } else if (stack && !String(err.stack).endsWith(stack.replace(/^.+\n.+\n/, ''))) {
+            err.stack += '\n' + stack
+          }
+        } catch (e) {
+          // ignore the case where "stack" is an un-writable property
+        }
+      }
+
+      throw err;
+    }
+  }
+
+  _request(configOrUrl, config) {
     /*eslint no-param-reassign:0*/
     // Allow for axios('example/url'[, config]) a la fetch API
     if (typeof configOrUrl === 'string') {
@@ -69,6 +96,20 @@ class Axios {
         }, true);
       }
     }
+
+    // Set config.allowAbsoluteUrls
+    if (config.allowAbsoluteUrls !== undefined) {
+      // do nothing
+    } else if (this.defaults.allowAbsoluteUrls !== undefined) {
+      config.allowAbsoluteUrls = this.defaults.allowAbsoluteUrls;
+    } else {
+      config.allowAbsoluteUrls = true;
+    }
+
+    validator.assertOptions(config, {
+      baseUrl: validators.spelling('baseURL'),
+      withXsrfToken: validators.spelling('withXSRFToken')
+    }, true);
 
     // Set config.method
     config.method = (config.method || this.defaults.method || 'get').toLowerCase();
@@ -112,8 +153,8 @@ class Axios {
 
     if (!synchronousRequestInterceptors) {
       const chain = [dispatchRequest.bind(this), undefined];
-      chain.unshift.apply(chain, requestInterceptorChain);
-      chain.push.apply(chain, responseInterceptorChain);
+      chain.unshift(...requestInterceptorChain);
+      chain.push(...responseInterceptorChain);
       len = chain.length;
 
       promise = Promise.resolve(config);
@@ -160,7 +201,7 @@ class Axios {
 
   getUri(config) {
     config = mergeConfig(this.defaults, config);
-    const fullPath = buildFullPath(config.baseURL, config.url);
+    const fullPath = buildFullPath(config.baseURL, config.url, config.allowAbsoluteUrls);
     return buildURL(fullPath, config.params, config.paramsSerializer);
   }
 }
