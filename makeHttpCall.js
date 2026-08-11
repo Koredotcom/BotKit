@@ -12,21 +12,19 @@ const axios = require('axios');
  * @throws {Error} If an error occurs during the request.
  */
 
-async function makeHttpCall(method, url, data = null, headers = {}) {
+async function makeHttpCall(method, url, data = undefined, headers = {}) {
   try {
-    const response = await axios({
-      method,
-      url,
-      data,
-      headers,
-    });
+    const options = {
+      url, method, headers, data
+    }
+
+    const response = await axios(options);
 
     return response;
   } catch (error) {
     throw error;
   }
 }
-
 
 module.exports = {
     makeHttpCall
